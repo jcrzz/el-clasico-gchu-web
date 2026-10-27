@@ -1,23 +1,25 @@
+import "server-only";
+
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import {
+  getSupabaseAnonKey,
+  getSupabaseProjectUrl,
+  isSupabaseConfigured,
+} from "./config";
 
 /**
  * Authenticated server client, used by /admin and the protected mutations.
  * The public site reads content through lib/data.ts instead.
  */
 export async function createSupabaseAuthClient() {
-  if (
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  ) {
-    return null;
-  }
+  if (!isSupabaseConfigured()) return null;
 
   const cookieStore = await cookies();
 
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    getSupabaseProjectUrl(),
+    getSupabaseAnonKey(),
     {
       cookies: {
         getAll() {
@@ -29,7 +31,7 @@ export async function createSupabaseAuthClient() {
               cookieStore.set(name, value, options);
             });
           } catch {
-            // Called from a Server Component: middleware refreshes the session.
+            // Called from a Server Component: Proxy refreshes the session.
           }
         },
       },

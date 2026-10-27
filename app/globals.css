@@ -371,6 +371,14 @@
     filter: blur(40px);
   }
 
+  .admin-grid-bg {
+    background-image:
+      linear-gradient(rgba(244, 244, 245, 0.032) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(244, 244, 245, 0.032) 1px, transparent 1px);
+    background-size: 56px 56px;
+    background-position: -1px -1px;
+  }
+
   .marquee-track {
     display: flex;
     width: max-content;

@@ -1,11 +1,9 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-
-export function isSupabaseConfigured() {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  );
-}
+import {
+  getSupabaseAnonKey,
+  getSupabaseProjectUrl,
+  isSupabaseConfigured,
+} from "./config";
 
 /**
  * Read-only client for public content. Returns null while the project runs in
@@ -14,11 +12,7 @@ export function isSupabaseConfigured() {
 export function getSupabaseServer(): SupabaseClient | null {
   if (!isSupabaseConfigured()) return null;
 
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      auth: { persistSession: false, autoRefreshToken: false },
-    },
-  );
+  return createClient(getSupabaseProjectUrl(), getSupabaseAnonKey(), {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
 }

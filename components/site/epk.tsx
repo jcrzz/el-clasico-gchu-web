@@ -10,6 +10,10 @@ import type { Epk as EpkType } from "@/lib/types";
 import { externalLinkProps } from "@/lib/utils";
 
 export function Epk({ epk }: { epk: EpkType }) {
+  const riderDownload = epk.downloads.find(
+    (download) => download.id === "d-rider",
+  );
+
   return (
     <section
       id="epk"
@@ -121,7 +125,7 @@ export function Epk({ epk }: { epk: EpkType }) {
             </ol>
 
             <a
-              href="/press/el-clasico-rider.pdf"
+              href={riderDownload?.url ?? "/press/el-clasico-rider.pdf"}
               download
               className="mt-5 inline-flex items-center justify-between gap-3 border-t border-white/10 pt-4 font-mono text-[9px] tracking-[0.14em] text-ash transition-colors hover:text-fire"
             >

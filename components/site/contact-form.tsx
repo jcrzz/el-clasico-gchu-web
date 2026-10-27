@@ -3,10 +3,12 @@
 import { useState, type FormEvent } from "react";
 import {
   Check,
+  FlaskConical,
   Loader2,
   Send,
   TriangleAlert,
 } from "lucide-react";
+import { submitContactAction } from "@/app/actions/contact";
 import { whatsappUrl } from "@/lib/utils";
 import type { SiteSettings } from "@/lib/types";
 
@@ -20,6 +22,7 @@ export function ContactForm({ settings }: { settings: SiteSettings }) {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [status, setStatus] = useState<Status>("idle");
   const [feedback, setFeedback] = useState("");
+  const [demo, setDemo] = useState(false);
 
   const update = (field: keyof typeof initialValues, value: string) => {
     setValues((current) => ({ ...current, [field]: value }));
@@ -59,26 +62,20 @@ export function ContactForm({ settings }: { settings: SiteSettings }) {
 
     setStatus("sending");
     setFeedback("");
+    setDemo(false);
 
     try {
-      const response = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
+      const result = await submitContactAction(values);
 
-      const data = (await response.json().catch(() => ({}))) as {
-        error?: string;
-      };
-
-      if (!response.ok) {
-        throw new Error(
-          data.error ??
-            "No pudimos enviar el mensaje. Probá de nuevo en un momento.",
-        );
+      if (!result.ok) {
+        if (result.fieldErrors) {
+          setErrors(result.fieldErrors);
+        }
+        throw new Error(result.error);
       }
 
       setStatus("success");
+      setDemo(Boolean(result.demo));
       setValues(initialValues);
     } catch (error) {
       setStatus("error");
@@ -106,9 +103,25 @@ export function ContactForm({ settings }: { settings: SiteSettings }) {
           Gracias por escribir. Te respondemos a la brevedad, al email que nos
           dejaste.
         </p>
+        {demo ? (
+          <div className="mt-5 flex max-w-sm items-start gap-2.5 border border-amber/25 bg-amber/[0.06] p-3">
+            <FlaskConical
+              size={14}
+              className="mt-0.5 shrink-0 text-amber"
+              aria-hidden="true"
+            />
+            <p className="font-mono text-[8px] leading-relaxed tracking-[0.08em] text-amber/90">
+              MODO DEMO / El mensaje quedó registrado en la consola del servidor.
+              Configurá RESEND_API_KEY para enviarlo de verdad.
+            </p>
+          </div>
+        ) : null}
         <button
           type="button"
-          onClick={() => setStatus("idle")}
+          onClick={() => {
+            setDemo(false);
+            setStatus("idle");
+          }}
           className="btn btn-ghost mt-7"
         >
           Enviar otro mensaje

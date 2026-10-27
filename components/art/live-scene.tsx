@@ -241,8 +241,8 @@ function DrumKit({
         return (
           <circle
             key={`bolt-${index}`}
-            cx={Math.cos(angle) * 100}
-            cy={-128 + Math.sin(angle) * 100}
+            cx={Math.round(Math.cos(angle) * 10000) / 100}
+            cy={-128 + Math.round(Math.sin(angle) * 10000) / 100}
             r="3"
             fill={BONE}
             opacity=".22"
@@ -1372,8 +1372,8 @@ function DrummerScene() {
           return (
             <circle
               key={`lug-${index}`}
-              cx={Math.cos(angle) * 248}
-              cy={Math.sin(angle) * 78}
+              cx={Math.round(Math.cos(angle) * 24800) / 100}
+              cy={Math.round(Math.sin(angle) * 7800) / 100}
               r="5"
               fill={BONE}
               opacity=".28"
