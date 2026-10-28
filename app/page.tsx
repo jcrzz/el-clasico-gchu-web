@@ -1,3 +1,5 @@
+import { AudioProvider } from "@/components/audio/audio-provider";
+import { FloatingPlayer } from "@/components/audio/floating-player";
 import { Contact } from "@/components/site/contact";
 import { Epk } from "@/components/site/epk";
 import { Footer } from "@/components/site/footer";
@@ -11,14 +13,14 @@ import { Shows } from "@/components/site/shows";
 import { getSiteData } from "@/lib/data";
 
 export default async function HomePage() {
-  const { settings, album, shows, gallery, epk } = await getSiteData();
+  const { settings, albums, shows, gallery, epk } = await getSiteData();
 
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "MusicGroup",
     name: "El Clásico",
     description:
-      "Banda de rock de Gualeguaychú, Entre Ríos, Argentina. Fuego Interior (2025).",
+      "Banda de rock de Gualeguaychú, Entre Ríos, Argentina. Cinco discos y una gira 2026.",
     foundingDate: "2018",
     genre: ["Rock", "Rock alternativo"],
     foundingLocation: {
@@ -27,12 +29,17 @@ export default async function HomePage() {
     },
     email: settings.email,
     sameAs: settings.socials.map((social) => social.href),
-    album: {
+    album: albums.map((album) => ({
       "@type": "MusicAlbum",
       name: album.title,
-      datePublished: album.year,
+      ...(album.year ? { datePublished: album.year } : {}),
       numTracks: album.trackCount,
-    },
+      track: album.tracks.map((track) => ({
+        "@type": "MusicRecording",
+        name: track.title,
+        position: Number(track.number),
+      })),
+    })),
     event: shows
       .filter((show) => show.status !== "paused")
       .map((show) => ({
@@ -64,13 +71,13 @@ export default async function HomePage() {
   };
 
   return (
-    <>
+    <AudioProvider albums={albums}>
       <Navbar settings={settings} />
       <main id="contenido">
         <Hero shows={shows} />
         <History />
         <Hermandad />
-        <Music album={album} />
+        <Music albums={albums} />
         <Shows
           shows={shows}
           whatsapp={settings.whatsapp}
@@ -81,10 +88,11 @@ export default async function HomePage() {
         <Contact settings={settings} />
       </main>
       <Footer settings={settings} />
+      <FloatingPlayer />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-    </>
+    </AudioProvider>
   );
 }

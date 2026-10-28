@@ -58,7 +58,8 @@ export const metadata: Metadata = {
     "Gualeguaychú",
     "Entre Ríos",
     "rock argentino",
-    "Fuego Interior",
+    "Acá Nadie Se Rinde",
+    "La Patria No Se Vende",
     "La Hermandad",
     "shows en vivo",
     "gira 2026",
@@ -74,14 +75,14 @@ export const metadata: Metadata = {
     siteName,
     title: "EL CLÁSICO — Donde el rock se vive",
     description:
-      "Rock desde Gualeguaychú para toda la región. Escuchá Fuego Interior y encontrá las fechas de la gira 2026.",
+      "Rock desde Gualeguaychú para toda la región. Escuchá nuestra discografía y encontrá las fechas de la gira 2026.",
     images: [ogImage],
   },
   twitter: {
     card: "summary_large_image",
     title: "EL CLÁSICO — Donde el rock se vive",
     description:
-      "Rock desde Gualeguaychú para toda la región. Fuego Interior (2025) y gira 2026.",
+      "Rock desde Gualeguaychú para toda la región. Discografía completa y gira 2026.",
     images: [ogImage.url],
   },
   robots: {

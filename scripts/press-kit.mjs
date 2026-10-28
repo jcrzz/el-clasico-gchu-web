@@ -7,6 +7,7 @@ const root = resolve(process.cwd());
 const pressDir = join(root, "public", "press");
 const tempDir = join(tmpdir(), "el-clasico-press");
 const photosDir = join(tempDir, "fotos");
+await rm(tempDir, { recursive: true, force: true });
 await mkdir(pressDir, { recursive: true });
 await mkdir(photosDir, { recursive: true });
 
@@ -180,30 +181,250 @@ await printPage.pdf({
 await printPage.close();
 
 /* ------------------------------------------------------------------ */
+/* 1b. Bio / dossier — two A4 pages, print friendly                    */
+/* ------------------------------------------------------------------ */
+
+const bioHtml = String.raw`<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: A4 portrait; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: #f4f2ec; color: #121212;
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .page {
+    position: relative; width: 210mm; height: 296.8mm; padding: 13mm 15mm 11mm;
+    display: flex; flex-direction: column; overflow: hidden;
+    break-after: page;
+  }
+  .page:last-child { break-after: auto; }
+  .page::before {
+    content: ""; position: absolute; top: 0; bottom: 0; left: 7mm;
+    width: 1px; background: rgba(18,18,18,.12);
+  }
+  .top { display: flex; align-items: flex-end; justify-content: space-between; gap: 8mm; border-bottom: 2px solid #121212; padding-bottom: 3.4mm; }
+  .brand { font-family: "Arial Narrow", "Helvetica Neue", sans-serif; font-weight: 900; font-size: 30pt; line-height: .8; letter-spacing: -.01em; text-transform: uppercase; }
+  .brand span { color: #d4113b; }
+  .doc { text-align: right; }
+  .doc h1 { margin: 0; font-family: "Arial Narrow", sans-serif; font-size: 13pt; letter-spacing: .07em; text-transform: uppercase; }
+  .doc p { margin: 1.4mm 0 0; font-family: "Courier New", monospace; font-size: 6.2pt; letter-spacing: .16em; text-transform: uppercase; color: #5b5b5b; }
+
+  .kicker { margin-top: 9mm; font-family: "Courier New", monospace; font-size: 6.4pt; letter-spacing: .2em; text-transform: uppercase; color: #5b5b5b; }
+  .headline { margin-top: 4mm; font-family: "Arial Narrow", "Helvetica Neue", sans-serif; font-weight: 900; font-size: 45pt; line-height: .84; letter-spacing: -.015em; text-transform: uppercase; }
+  .headline em { font-style: normal; color: #d4113b; }
+  .hero { display: grid; grid-template-columns: 1fr 52mm; gap: 8mm; align-items: end; margin-top: 4mm; padding-bottom: 4mm; border-bottom: 1px solid #c9c6bc; }
+  .hero .meta { display: flex; flex-direction: column; gap: 1.4mm; font-family: "Courier New", monospace; font-size: 6pt; letter-spacing: .1em; text-transform: uppercase; color: #3c3c3c; }
+  .hero .meta b { color: #d4113b; font-weight: 700; }
+
+  .lede { margin: 6mm 0 0; max-width: 160mm; font-size: 11pt; line-height: 1.4; letter-spacing: -.005em; }
+  .bio { margin-top: 5mm; columns: 2; column-gap: 8mm; column-rule: 1px solid #ddd9cf; }
+  .bio p { margin: 0 0 3.2mm; font-size: 8.3pt; line-height: 1.55; color: #2e2e2e; text-align: justify; }
+  .bio p:first-child::first-letter { float: left; margin: .4mm 1.6mm 0 0; font-family: "Arial Narrow", sans-serif; font-weight: 900; font-size: 30pt; line-height: .8; color: #d4113b; }
+
+  .facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-top: auto; border-top: 1px solid #121212; border-left: 1px solid #ddd9cf; }
+  .fact { padding: 3mm 3mm 2.6mm; border-right: 1px solid #ddd9cf; border-bottom: 1px solid #ddd9cf; }
+  .fact span { display: block; font-family: "Courier New", monospace; font-size: 5.6pt; letter-spacing: .16em; text-transform: uppercase; color: #d4113b; }
+  .fact b { display: block; margin-top: 1.4mm; font-family: "Arial Narrow", sans-serif; font-size: 10.5pt; letter-spacing: .02em; text-transform: uppercase; }
+
+  .foot { display: flex; justify-content: space-between; align-items: flex-end; gap: 6mm; margin-top: 4mm; padding-top: 3mm; border-top: 1px solid #c9c6bc; font-family: "Courier New", monospace; font-size: 5.8pt; letter-spacing: .12em; text-transform: uppercase; color: #5b5b5b; }
+  .foot b { color: #121212; }
+
+  .section-title { margin: 10mm 0 0; font-family: "Arial Narrow", sans-serif; font-weight: 900; font-size: 36pt; line-height: .86; letter-spacing: -.01em; text-transform: uppercase; }
+  .section-title span { color: #d4113b; }
+  .section-sub { margin: 3.4mm 0 0; max-width: 150mm; font-size: 8.6pt; line-height: 1.5; color: #3c3c3c; }
+
+  .albums { margin-top: 7mm; border-top: 2px solid #121212; }
+  .album { display: grid; grid-template-columns: 16mm 1fr 42mm; gap: 4mm; align-items: center; padding: 4.1mm 0 3.9mm; border-bottom: 1px solid #ccc8be; }
+  .album .num { font-family: "Arial Narrow", sans-serif; font-weight: 900; font-size: 20pt; line-height: .8; color: #d4113b; }
+  .album h3 { margin: 0; font-family: "Arial Narrow", sans-serif; font-size: 16pt; font-weight: 700; line-height: .95; letter-spacing: .01em; text-transform: uppercase; }
+  .album p { margin: 1.2mm 0 0; font-family: "Courier New", monospace; font-size: 5.8pt; letter-spacing: .14em; text-transform: uppercase; color: #6a6a6a; }
+  .album .status { text-align: right; font-family: "Courier New", monospace; font-size: 6pt; letter-spacing: .12em; text-transform: uppercase; color: #3c3c3c; }
+  .album .status b { display: block; font-size: 6.6pt; color: #121212; }
+  .album.pending .num, .album.pending .status b { color: #b87700; }
+  .album.pending h3 { color: #3c3c3c; }
+
+  .live { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; margin-top: 9mm; padding: 4.4mm 0; border-top: 1px solid #121212; border-bottom: 1px solid #c9c6bc; }
+  .live div { font-family: "Courier New", monospace; font-size: 5.8pt; letter-spacing: .14em; text-transform: uppercase; color: #6a6a6a; }
+  .live b { display: block; margin-top: 1.4mm; font-family: "Arial Narrow", sans-serif; font-size: 13pt; letter-spacing: .02em; color: #121212; }
+
+  .contact { display: grid; grid-template-columns: 1fr 1fr; gap: 8mm; margin-top: 9mm; }
+  .contact h4 { margin: 0 0 2.4mm; font-family: "Courier New", monospace; font-size: 6pt; letter-spacing: .18em; text-transform: uppercase; color: #d4113b; }
+  .contact p { margin: 0; font-family: "Arial Narrow", sans-serif; font-size: 11pt; line-height: 1.45; text-transform: uppercase; }
+  .contact small { display: block; margin-top: 1.6mm; font-family: "Courier New", monospace; font-size: 5.8pt; letter-spacing: .12em; text-transform: uppercase; color: #6a6a6a; }
+  .stamp { margin-top: 10mm; padding: 3.4mm 4mm; background: #121212; color: #f4f2ec; font-family: "Courier New", monospace; font-size: 6.2pt; line-height: 1.55; letter-spacing: .1em; text-transform: uppercase; }
+  .stamp b { color: #f0a223; }
+
+  .outro { display: flex; align-items: flex-end; justify-content: space-between; gap: 8mm; margin-top: 11mm; padding-top: 4mm; border-top: 2px solid #121212; }
+  .outro span { font-family: "Courier New", monospace; font-size: 6.2pt; letter-spacing: .18em; text-transform: uppercase; color: #5b5b5b; }
+  .outro p { margin: 0; font-family: "Arial Narrow", sans-serif; font-weight: 900; font-size: 27pt; line-height: .86; letter-spacing: -.01em; text-transform: uppercase; text-align: right; }
+  .outro em { font-style: normal; color: #d4113b; }
+  .page:last-child .foot { margin-top: auto; }
+</style>
+</head>
+<body>
+  <section class="page">
+    <div class="top">
+      <div class="brand">EL CLÁSICO<span>.</span></div>
+      <div class="doc"><h1>Press kit / 2026</h1><p>Biografía oficial</p></div>
+    </div>
+
+    <p class="kicker">Rock desde Gualeguaychú · Entre Ríos · Argentina</p>
+
+    <div class="hero">
+      <div class="headline">Rock de <em>acá.</em><br>Hecho para<br>arder.</div>
+      <div class="meta">
+        <span><b>Formación</b> 5 músicos</span>
+        <span><b>Activos desde</b> 2018</span>
+        <span><b>Gira</b> Argentina + Uruguay</span>
+        <span><b>Discografía</b> 5 discos · 40 canciones</span>
+      </div>
+    </div>
+
+    <p class="lede">Rock de Gualeguaychú para toda la región. Guitarras de filo clásico, pulso moderno y una comunidad que crece en cada show.</p>
+
+    <div class="bio">
+      <p>El Clásico nació en 2018 en Gualeguaychú, Entre Ríos, con una idea simple y obstinada: devolverle al rock el volumen, la mística y las ganas de cantar hasta quedarse sin voz. La banda construyó su sonido entre guitarras de filo clásico, ritmos modernos y letras que hablan de calles de provincia, noches largas y fuegos que no se apagan.</p>
+      <p>Desde los primeros shows en clubes y centros culturales hasta la gira que hoy recorre Argentina y Uruguay, El Clásico convirtió cada presentación en un ritual compartido. Ese vínculo tiene nombre propio: La Hermandad, la comunidad de fans que creció show tras show y que hoy es parte inseparable del proyecto.</p>
+      <p>A lo largo de cinco discos, El Clásico condensó su identidad: rock directo, estribillos para cantar en vivo y una producción que respeta la crudeza del escenario. El próximo capítulo se escribe en vivo.</p>
+    </div>
+
+    <div class="facts">
+      <div class="fact"><span>Origen</span><b>Gualeguaychú,<br>Entre Ríos</b></div>
+      <div class="fact"><span>Activos desde</span><b>2018</b></div>
+      <div class="fact"><span>Género</span><b>Rock clásico<br>/ moderno</b></div>
+      <div class="fact"><span>Discografía</span><b>5 discos</b></div>
+      <div class="fact"><span>Zona de gira</span><b>Argentina<br>y Uruguay</b></div>
+      <div class="fact"><span>Contacto</span><b>contacto@<br>elclasico.com</b></div>
+    </div>
+
+    <div class="foot">
+      <span><b>EL CLÁSICO</b> · GUALEGUAYCHÚ · ENTRE RÍOS · ARGENTINA</span>
+      <span>BIOGRAFÍA 01 / 02</span>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="top">
+      <div class="brand">EL CLÁSICO<span>.</span></div>
+      <div class="doc"><h1>Discografía</h1><p>Press kit / 2026</p></div>
+    </div>
+
+    <h2 class="section-title">Cinco discos<span>.</span></h2>
+    <p class="section-sub">Cuarenta canciones de rock directo, grabadas con la urgencia del escenario. El quinto disco completa la serie y se anuncia próximamente.</p>
+
+    <div class="albums">
+      <div class="album"><div class="num">01</div><div><h3>Acá Nadie Se Rinde</h3><p>Rock de provincia · orden de batalla</p></div><div class="status"><b>8 canciones</b>Editado</div></div>
+      <div class="album"><div class="num">02</div><div><h3>Resistiendo en la Trinchera</h3><p>Pulso moderno · resistencia</p></div><div class="status"><b>8 canciones</b>Editado</div></div>
+      <div class="album"><div class="num">03</div><div><h3>Que Se Pudra</h3><p>Filo clásico · sin concesiones</p></div><div class="status"><b>8 canciones</b>Editado</div></div>
+      <div class="album"><div class="num">04</div><div><h3>Con La Sangre Del Enemigo</h3><p>Crudeza de escenario · nocturno</p></div><div class="status"><b>8 canciones</b>Editado</div></div>
+      <div class="album pending"><div class="num">05</div><div><h3>La Patria No Se Vende</h3><p>Cierre de la serie · en preparación</p></div><div class="status"><b>8 canciones</b>Próximamente</div></div>
+    </div>
+
+    <div class="live">
+      <div>Formato <b>5 músicos</b></div>
+      <div>Show <b>90 minutos</b></div>
+      <div>Gira <b>Argentina + Uruguay</b></div>
+    </div>
+
+    <div class="contact">
+      <div>
+        <h4>Prensa</h4>
+        <p>prensa@elclasico.com</p>
+        <small>Entrevistas · material · acreditaciones</small>
+      </div>
+      <div>
+        <h4>Contrataciones</h4>
+        <p>contacto@elclasico.com</p>
+        <small>+54 9 3446 123456 · @elclasico.banda</small>
+      </div>
+    </div>
+
+    <div class="stamp"><b>El Clásico</b> — Gualeguaychú, Entre Ríos, Argentina. Rider técnico, planta escénica y fotos de prensa disponibles en el dossier completo. Todo el material puede usarse libremente con crédito a la banda.</div>
+
+    <div class="outro">
+      <span>El próximo capítulo</span>
+      <p>Se escribe<br><em>en vivo.</em></p>
+    </div>
+
+    <div class="foot">
+      <span><b>EL CLÁSICO</b> · ROCK DE ACÁ · GIRA 2026</span>
+      <span>BIOGRAFÍA 02 / 02</span>
+    </div>
+  </section>
+</body>
+</html>`;
+
+const bioPage = await browser.newPage();
+await bioPage.setContent(bioHtml, { waitUntil: "load" });
+await bioPage.evaluate(() => document.fonts.ready);
+await bioPage.pdf({
+  path: join(pressDir, "el-clasico-bio.pdf"),
+  format: "A4",
+  printBackground: true,
+  margin: { top: 0, right: 0, bottom: 0, left: 0 },
+});
+await bioPage.close();
+
+/* ------------------------------------------------------------------ */
 /* 2. Press photos — high-resolution renders of the gallery art        */
 /* ------------------------------------------------------------------ */
 
-const photos = [
-  { index: 0, name: "01-guitarra" },
-  { index: 1, name: "02-banda" },
-  { index: 2, name: "03-bateria" },
-  { index: 3, name: "04-vocalista" },
-];
+const baseUrl = (process.env.PRESS_BASE_URL || "http://localhost:3000").replace(
+  /\/$/,
+  "",
+);
+
+const slugify = (value) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48) || "foto";
 
 const captureContext = await browser.newContext({
   viewport: { width: 1440, height: 1000 },
   deviceScaleFactor: 1.5,
 });
 const capturePage = await captureContext.newPage();
-await capturePage.goto("http://localhost:3000", { waitUntil: "networkidle" });
+await capturePage.goto(baseUrl, { waitUntil: "networkidle" });
 await capturePage.evaluate(() => document.fonts.ready);
 await capturePage.locator("#fotos").scrollIntoViewIfNeeded();
 await capturePage.waitForTimeout(900);
 
+const gallery = await capturePage.evaluate(() =>
+  Array.from(
+    document.querySelectorAll("#fotos button[aria-label^='Ampliar foto']"),
+  ).map((button) => ({
+    alt: (button.getAttribute("aria-label") || "")
+      .replace(/^Ampliar foto:\s*/, "")
+      .trim(),
+    caption: (button.getAttribute("data-caption") || "").trim(),
+  })),
+);
+
+if (!gallery.length) {
+  throw new Error(`No gallery images found at ${baseUrl}/#fotos`);
+}
+
+const photos = gallery.map((image, index) => ({
+  index,
+  name: `${String(index + 1).padStart(2, "0")}-${slugify(image.caption || image.alt)}`,
+  caption: image.caption || image.alt,
+}));
+
 for (const photo of photos) {
   const rect = await capturePage.evaluate((index) => {
     const button = document.querySelectorAll("#fotos button[aria-label^='Ampliar foto']")[index];
-    const scene = button?.querySelector(".relative.isolate.overflow-hidden");
+    const scene = button?.matches(".relative.isolate.overflow-hidden")
+      ? button
+      : button?.querySelector(".relative.isolate.overflow-hidden");
     if (!scene) return null;
     const old = document.getElementById("press-capture");
     old?.remove();
@@ -238,11 +459,10 @@ await writeFile(
   `EL CLÁSICO — FOTOS DE PRENSA / GIRA 2026
 =========================================
 
-Contenido:
-  01-guitarra.jpg     Guitarra y humo — soundcheck
-  02-banda.jpg        La banda en el Centro Cultural — 2025
-  03-bateria.jpg      La batería marca el pulso
-  04-vocalista.jpg    Voz y silencio — antes de salir
+Contenido (${photos.length} ${photos.length === 1 ? "imagen" : "imágenes"}):
+${photos
+  .map((photo) => `  ${`${photo.name}.jpg`.padEnd(52)} ${photo.caption}`)
+  .join("\n")}
 
 Formato: JPEG, 2400 × 3000 px, perfil sRGB.
 Crédito obligatorio: "Foto: El Clásico / Archivo de prensa".
@@ -290,15 +510,14 @@ FICHA ARTÍSTICA
   Activos desde: 2018
   Género: rock clásico / moderno
   Formación: 5 músicos
-  Último lanzamiento: Fuego Interior (2025)
+  Discografía: 5 discos
 
-DISCO — FUEGO INTERIOR (2025)
-  01. Fuego Interior       4:12
-  02. Calles de Asfalto    3:45
-  03. Sin Retorno          5:01
-  04. La Hermandad         4:33
-  05. Despertar            3:58
-  06. Último Round         4:47
+DISCOGRAFÍA
+  01. Acá Nadie Se Rinde .............. 8 canciones
+  02. Resistiendo en la Trinchera ..... 8 canciones
+  03. Que Se Pudra .................... 8 canciones
+  04. Con La Sangre Del Enemigo ....... 8 canciones
+  05. La Patria No Se Vende ........... 8 canciones (próximamente)
 
 CONTACTO
   Prensa: prensa@elclasico.com

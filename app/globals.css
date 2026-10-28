@@ -324,6 +324,74 @@
     transform: scaleX(1);
     transform-origin: left;
   }
+
+  .audio-range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 18px;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .audio-range::-webkit-slider-runnable-track {
+    height: 3px;
+    background: linear-gradient(
+      to right,
+      var(--color-fire) 0%,
+      var(--color-fire) var(--range-progress, 0%),
+      rgba(244, 244, 245, 0.16) var(--range-progress, 0%),
+      rgba(244, 244, 245, 0.16) 100%
+    );
+  }
+
+  .audio-range::-moz-range-track {
+    height: 3px;
+    background: rgba(244, 244, 245, 0.16);
+  }
+
+  .audio-range::-moz-range-progress {
+    height: 3px;
+    background: var(--color-fire);
+  }
+
+  .audio-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    margin-top: -3.5px;
+    height: 10px;
+    width: 10px;
+    border: 0;
+    border-radius: 0;
+    background: var(--color-bone);
+    transition: background-color 0.2s ease, transform 0.2s ease;
+  }
+
+  .audio-range::-moz-range-thumb {
+    height: 10px;
+    width: 10px;
+    border: 0;
+    border-radius: 0;
+    background: var(--color-bone);
+    transition: background-color 0.2s ease, transform 0.2s ease;
+  }
+
+  .audio-range:hover::-webkit-slider-thumb,
+  .audio-range:focus-visible::-webkit-slider-thumb {
+    background: var(--color-fire);
+    transform: scale(1.25);
+  }
+
+  .audio-range:hover::-moz-range-thumb,
+  .audio-range:focus-visible::-moz-range-thumb {
+    background: var(--color-fire);
+    transform: scale(1.25);
+  }
+
+  .audio-range:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
 }
 
 @layer utilities {
@@ -412,6 +480,20 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
+  .eq-bar {
+    display: block;
+    width: 2px;
+    height: 100%;
+    background-color: currentColor;
+    transform-origin: bottom;
+    animation: eq 0.9s ease-in-out infinite;
+  }
+
+  .eq-bar[data-paused="true"] {
+    animation-play-state: paused;
+    transform: scaleY(0.28);
+  }
 }
 
 @keyframes hero-line {
@@ -469,6 +551,16 @@
   100% {
     transform: translateY(11px);
     opacity: 0;
+  }
+}
+
+@keyframes eq {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
   }
 }
 

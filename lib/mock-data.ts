@@ -1,11 +1,11 @@
 import type {
-  Album,
   Epk,
   GalleryImage,
   Show,
   SiteData,
   SiteSettings,
 } from "./types";
+import { discography } from "./discography";
 
 export const settings: SiteSettings = {
   name: "EL CLÁSICO",
@@ -39,26 +39,7 @@ export const settings: SiteSettings = {
   ],
 };
 
-export const album: Album = {
-  title: "FUEGO INTERIOR",
-  year: "2025",
-  trackCount: 6,
-  spotifyUrl:
-    "https://open.spotify.com/search/Fuego%20Interior%20El%20Cl%C3%A1sico",
-  youtubeUrl:
-    "https://www.youtube.com/results?search_query=El+Cl%C3%A1sico+Fuego+Interior",
-  appleMusicUrl:
-    "https://music.apple.com/search?term=El%20Cl%C3%A1sico%20Fuego%20Interior",
-  spotifyEmbedUrl: null,
-  tracks: [
-    { id: "t1", number: "01", title: "Fuego Interior", duration: "4:12" },
-    { id: "t2", number: "02", title: "Calles de Asfalto", duration: "3:45" },
-    { id: "t3", number: "03", title: "Sin Retorno", duration: "5:01" },
-    { id: "t4", number: "04", title: "La Hermandad", duration: "4:33" },
-    { id: "t5", number: "05", title: "Despertar", duration: "3:58" },
-    { id: "t6", number: "06", title: "Último Round", duration: "4:47" },
-  ],
-};
+export const albums = discography;
 
 export const shows: Show[] = [
   {
@@ -177,13 +158,13 @@ export const epk: Epk = {
   bio: [
     "El Clásico nació en 2018 en Gualeguaychú, Entre Ríos, con una idea simple y obstinada: devolverle al rock el volumen, la mística y las ganas de cantar hasta quedarse sin voz. La banda construyó su sonido entre guitarras de filo clásico, ritmos modernos y letras que hablan de calles de provincia, noches largas y fuegos que no se apagan.",
     "Desde los primeros shows en clubes y centros culturales hasta la gira que hoy recorre Argentina y Uruguay, El Clásico convirtió cada presentación en un ritual compartido. Ese vínculo tiene nombre propio: La Hermandad, la comunidad de fans que creció show tras show y que hoy es parte inseparable del proyecto.",
-    "En 2025 la banda publicó Fuego Interior, un disco de seis canciones que condensa su identidad: rock directo, estribillos para cantar en vivo y una producción que respeta la crudeza del escenario. El próximo capítulo se escribe en vivo.",
+    "A lo largo de cinco discos, El Clásico condensó su identidad: rock directo, estribillos para cantar en vivo y una producción que respeta la crudeza del escenario. El próximo capítulo se escribe en vivo.",
   ],
   facts: [
     { label: "Origen", value: "Gualeguaychú, Entre Ríos" },
     { label: "Activos desde", value: "2018" },
     { label: "Género", value: "Rock clásico / moderno" },
-    { label: "Último lanzamiento", value: "Fuego Interior (2025)" },
+    { label: "Discos editados", value: "5" },
     { label: "Zona de gira", value: "Argentina y Uruguay" },
     { label: "Contacto", value: "contacto@elclasico.com" },
   ],
@@ -243,7 +224,7 @@ export const epk: Epk = {
     {
       id: "d-demo",
       title: "Demo / EPK",
-      description: "Fuego Interior, biografía corta y material de difusión.",
+      description: "Discografía, biografía corta y material de difusión.",
       format: "ZIP",
       size: "ZIP",
       url: "/press/el-clasico-epk.zip",
@@ -253,7 +234,7 @@ export const epk: Epk = {
 
 export const mockSiteData: SiteData = {
   settings,
-  album,
+  albums,
   shows,
   gallery,
   epk,

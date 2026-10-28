@@ -30,21 +30,43 @@ export interface GalleryImage {
   mono?: boolean;
 }
 
+export type AlbumStatus = "released" | "upcoming";
+
+export type AlbumCoverVariant = "flame" | "trench" | "rot" | "blood" | "flag";
+
+export type AlbumAccent = "fire" | "amber" | "steel";
+
 export interface Track {
   id: string;
   number: string;
   title: string;
-  duration: string;
+  /** Duración en segundos cuando el archivo de audio ya la expone. */
+  durationSeconds: number | null;
+  /** URL resuelta en el servidor (Storage, CDN o /public/audio). */
+  audioUrl: string | null;
+  /** Ruta relativa dentro de /audio, sin extensión. Se usa para resolver la URL. */
+  audioFile: string | null;
+}
+
+export interface AlbumLinks {
+  spotify: string;
+  youtube: string;
+  appleMusic: string;
 }
 
 export interface Album {
+  id: string;
+  number: string;
+  slug: string;
   title: string;
-  year: string;
+  year: string | null;
+  status: AlbumStatus;
+  cover: AlbumCoverVariant;
+  accent: AlbumAccent;
+  coverLines: string[];
   trackCount: number;
   tracks: Track[];
-  spotifyUrl: string;
-  youtubeUrl: string;
-  appleMusicUrl: string;
+  links: AlbumLinks;
   spotifyEmbedUrl: string | null;
 }
 
@@ -101,7 +123,7 @@ export interface SiteSettings {
 
 export interface SiteData {
   settings: SiteSettings;
-  album: Album;
+  albums: Album[];
   shows: Show[];
   gallery: GalleryImage[];
   epk: Epk;

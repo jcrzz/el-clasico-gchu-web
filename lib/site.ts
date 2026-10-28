@@ -6,7 +6,7 @@ export const siteUrl = rawSiteUrl.replace(/\/+$/, "");
 export const siteName = "EL CLÁSICO";
 
 export const siteDescription =
-  "El Clásico es una banda de rock de Gualeguaychú, Entre Ríos. Fuego Interior, gira 2026 y La Hermandad: rock clásico y moderno desde el litoral argentino.";
+  "El Clásico es una banda de rock de Gualeguaychú, Entre Ríos. Cinco discos, gira 2026 y La Hermandad: rock clásico y moderno desde el litoral argentino.";
 
 export const ogImage = {
   url: "/og-el-clasico.png",

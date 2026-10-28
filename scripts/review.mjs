@@ -67,10 +67,10 @@ await page.evaluate(() => {
   if (header instanceof HTMLElement) header.style.visibility = "";
 });
 
-// Interactions: track selection
+// Interactions: discography selector
 await page.locator("#musica").scrollIntoViewIfNeeded();
-await page.getByRole("button", { name: /La Hermandad/ }).first().click();
-await page.waitForTimeout(500);
+await page.getByRole("tab", { name: /Que Se Pudra/i }).click();
+await page.waitForTimeout(600);
 await page.locator("#musica").screenshot({ path: `${out}/10-music-selected.png` });
 
 // Shows filter

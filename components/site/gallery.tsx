@@ -168,6 +168,7 @@ export function Gallery({ images }: { images: GalleryImage[] }) {
                 type="button"
                 onClick={() => openImage(index)}
                 aria-label={`Ampliar foto: ${image.alt}`}
+                data-caption={image.caption}
                 className={cn(
                   "group relative isolate overflow-hidden border border-white/10 bg-carbon text-left",
                   spanClasses(image.span, index),

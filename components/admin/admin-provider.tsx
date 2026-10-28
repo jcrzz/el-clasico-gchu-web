@@ -56,7 +56,7 @@ function isValidDemoData(value: unknown): value is AdminData {
     Array.isArray(candidate.gallery) &&
     Boolean(candidate.epk) &&
     Boolean(candidate.settings) &&
-    Boolean(candidate.album)
+    Array.isArray(candidate.albums)
   );
 }
 

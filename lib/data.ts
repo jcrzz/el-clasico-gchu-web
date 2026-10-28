@@ -1,4 +1,5 @@
 import { cacheLife, cacheTag } from "next/cache";
+import { withResolvedAudio } from "./audio";
 import {
   mapGalleryRow,
   mapShowRow,
@@ -15,8 +16,13 @@ export async function getSiteData() {
   cacheLife("hours");
   cacheTag("site-data", "shows", "gallery", "epk");
 
+  const base = {
+    ...mockSiteData,
+    albums: withResolvedAudio(mockSiteData.albums),
+  };
+
   const supabase = getSupabaseServer();
-  if (!supabase) return mockSiteData;
+  if (!supabase) return base;
 
   try {
     const [showsResult, galleryResult, epkResult] = await Promise.all([
@@ -49,12 +55,12 @@ export async function getSiteData() {
     );
 
     return {
-      ...mockSiteData,
+      ...base,
       shows,
       gallery,
       epk,
     };
   } catch {
-    return mockSiteData;
+    return base;
   }
 }

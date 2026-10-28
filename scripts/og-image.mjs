@@ -78,8 +78,8 @@ const buildPoster = async (width, height, kind) => {
 
           <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:24px;">
             <div style="font-family:var(--font-jetbrains),monospace;font-size:12px;line-height:1.8;letter-spacing:.2em;text-transform:uppercase;">
-              <span style="color:#f59e0b">FUEGO INTERIOR</span><br/>
-              <span style="color:#8b8b90">NUEVO DISCO · 2025</span>
+              <span style="color:#f59e0b">DISCOGRAFÍA COMPLETA</span><br/>
+              <span style="color:#8b8b90">5 DISCOS · 40 CANCIONES</span>
             </div>
             <div style="font-family:var(--font-jetbrains),monospace;font-size:12px;line-height:1.8;letter-spacing:.2em;text-transform:uppercase;text-align:center;">
               <span style="color:#f4f4f5">GIRA 2026</span><br/>

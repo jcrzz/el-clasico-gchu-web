@@ -86,6 +86,7 @@ de Vercel. Al finalizar, el servidor valida la ruta y guarda la URL pública.
 | `SUPABASE_SERVICE_ROLE_KEY` | Panel | Sólo servidor: CRUD y uploads firmados |
 | `SUPABASE_GALLERY_BUCKET` | No | Bucket de fotos (default `gallery`) |
 | `SUPABASE_PRESS_BUCKET` | No | Bucket de descargables (default `press`) |
+| `AUDIO_BASE_URL` | No | Base pública de los audios de la discografía |
 | `RESEND_API_KEY` | Producción | Envío del formulario |
 | `CONTACT_TO_EMAIL` | No | Destino de los mensajes |
 | `CONTACT_FROM_EMAIL` | No | Remitente verificado en Resend |
@@ -140,6 +141,30 @@ El contenido público se cachea con `"use cache"`, `cacheLife("hours")` y los ta
 `updateTag("shows" | "gallery" | "epk")` para invalidar el cache y mostrar los
 cambios de inmediato.
 
+## Discografía y audio
+
+Los cinco discos y sus tracklists viven en `lib/discography.ts`. Cada pista
+declara el archivo esperado, y `lib/audio.ts` resuelve la URL en el servidor:
+
+- sin `AUDIO_BASE_URL`, busca `public/audio/<disco>/<pista>.m4a` (también
+  `.mp3`, `.ogg` y `.wav`);
+- con `AUDIO_BASE_URL`, arma `<base>/<disco>/<pista>.m4a` (o el nombre completo
+  si la pista ya incluye extensión), pensado para un bucket o CDN público.
+
+```text
+public/audio/
+  01-aca-nadie-se-rinde/
+    01-1-en-32.m4a
+    02-camalote.m4a
+    ...
+```
+
+Si el archivo no existe, la pista queda con `audioUrl: null` y la UI muestra
+`AUDIO PENDIENTE` o `PRÓXIMAMENTE` (Disco 5). Un único `<audio>` global vive en
+`components/audio/audio-provider.tsx`, así que la reproducción sigue al cambiar
+de disco o al salir de la sección; `components/audio/floating-player.tsx` es el
+mini-player fijo que aparece fuera de `#musica`.
+
 ## Estructura
 
 ```text
@@ -160,12 +185,15 @@ app/
 components/
   site/                    navbar, hero, historia, hermandad, música,
                            shows, galería, EPK, contacto, footer
+  audio/                   provider global + mini-player flotante
   admin/                   provider, shell, login, dashboard y managers
   art/                     escenas SVG, tapa de disco, stage plot
   ui/                      iconos de marca, crop marks, encabezados
 lib/
   admin/                   auth, config, datos, schemas, acciones, formato
   email/                   plantilla y envío compartido con Resend
+  discography.ts           catálogo de discos y tracklists
+  audio.ts                 resolución server-side de las URLs de audio
   mock-data.ts             contenido inicial
   data.ts                  capa cacheada con fallback a mock
   content-mappers.ts       filas Supabase → tipos del sitio
@@ -175,6 +203,7 @@ proxy.ts                   protección de /admin (Next.js 16)
 supabase/schema.sql        tablas, RLS y buckets
 public/
   press/                   PDFs y ZIPs descargables
+  audio/                   pistas locales (se crean al cargar los audios)
   textures/grain.svg
 scripts/
   review.mjs               screenshots e interacciones (Playwright)
@@ -193,17 +222,22 @@ Los descargables iniciales están en `public/press/`:
 - `el-clasico-fotos.zip`
 - `el-clasico-epk.zip`
 
-Para regenerar la planta escénica y los ZIPs (con el servidor de desarrollo
-corriendo):
+Para regenerar la biografía, la planta escénica y los ZIPs (con el servidor de
+desarrollo corriendo):
 
 ```bash
 node scripts/press-kit.mjs
 ```
 
-Las fotos del ZIP se generan a partir del arte SVG de la galería. Son placeholders
-hasta reemplazarlas por fotografía oficial de la banda. Una vez que subís
-archivos desde `/admin`, el sitio usa primero las URLs de Supabase y cae al mock
-sólo si esa fila está vacía.
+El script toma las fotos de la galería publicada en `#fotos`, así que la cantidad
+de archivos sigue a las imágenes disponibles (con Supabase configurado usa esa
+galería; sin credenciales usa el arte SVG del mock). Para apuntar a otro puerto o
+entorno, definí `PRESS_BASE_URL` (por ejemplo `http://localhost:3100`) antes de
+ejecutar el script.
+
+Las fotos del ZIP son placeholders hasta reemplazarlas por fotografía oficial de
+la banda. Una vez que subís archivos desde `/admin`, el sitio usa primero las URLs
+de Supabase y cae al mock sólo si esa fila está vacía.
 
 ## QA
 

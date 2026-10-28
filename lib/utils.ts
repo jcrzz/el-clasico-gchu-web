@@ -47,3 +47,15 @@ export function externalLinkProps(href: string) {
   if (!href.startsWith("http")) return {};
   return { target: "_blank", rel: "noreferrer noopener" };
 }
+
+export function formatTime(seconds: number | null | undefined) {
+  if (seconds == null || !Number.isFinite(seconds) || seconds < 0) {
+    return "--:--";
+  }
+
+  const total = Math.floor(seconds);
+  const minutes = Math.floor(total / 60);
+  const remaining = total % 60;
+
+  return `${String(minutes).padStart(2, "0")}:${String(remaining).padStart(2, "0")}`;
+}
