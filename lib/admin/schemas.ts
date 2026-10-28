@@ -9,30 +9,65 @@ const httpUrl = z
     "Usá un link que empiece con http:// o https://.",
   );
 
+const booleanLike = z.preprocess((val) => {
+  if (val === true || val === 1) return true;
+  if (val === false || val === 0) return false;
+  if (typeof val === "string") {
+    const v = val.trim().toLowerCase();
+    if (v === "true" || v === "1" || v === "on") return true;
+    if (v === "false" || v === "0" || v === "off" || v === "") return false;
+  }
+  if (val === undefined || val === null) return false;
+  return Boolean(val);
+}, z.boolean());
+
 export const showInputSchema = z
   .object({
-    id: z.string().trim().min(1).optional(),
+    id: z.preprocess(
+      (val) => {
+        if (val === "" || val === null || val === undefined) return undefined;
+        if (typeof val === "string") return val.trim();
+        return val;
+      },
+      z.string().trim().min(1).optional(),
+    ),
     date: z
       .string()
       .trim()
       .regex(/^\d{4}-\d{2}-\d{2}$/, "Elegí una fecha válida."),
     time: z
-      .string()
-      .trim()
-      .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Usá un horario válido.")
-      .or(z.literal(""))
+      .preprocess((val) => {
+        if (val === null || val === undefined) return "";
+        if (typeof val === "string") {
+          const v = val.trim();
+          if (/^\d{2}:\d{2}:\d{2}$/.test(v)) return v.slice(0, 5);
+          return v;
+        }
+        return val;
+      }, z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Usá un horario válido.").or(z.literal("")))
       .optional()
       .default(""),
     city: z.string().trim().min(2, "Indicá la ciudad.").max(80),
     country: z.enum(["AR", "UY"]),
     venue: z.string().trim().min(2, "Indicá el venue.").max(140),
-    ticketUrl: httpUrl.optional().default(""),
-    notes: z.string().trim().max(400).optional().default(""),
-    soldOut: z.boolean().optional().default(false),
-    freeEntry: z.boolean().optional().default(false),
+    ticketUrl: z.preprocess((val) => {
+      if (val === null || val === undefined) return "";
+      if (typeof val === "string") return val.trim();
+      return val;
+    }, httpUrl.optional().default("")),
+    notes: z.preprocess((val) => {
+      if (val === null || val === undefined) return "";
+      if (typeof val === "string") return val.trim();
+      return val;
+    }, z.string().trim().max(400).optional().default("")),
+    soldOut: booleanLike.default(false),
+    freeEntry: booleanLike.default(false),
   })
   .superRefine((value, ctx) => {
-    if (value.freeEntry && value.soldOut) {
+    const soldOut = Boolean(value.soldOut);
+    const freeEntry = Boolean(value.freeEntry);
+
+    if (freeEntry && soldOut) {
       ctx.addIssue({
         code: "custom",
         path: ["freeEntry"],
@@ -40,7 +75,7 @@ export const showInputSchema = z
       });
     }
 
-    if (!value.soldOut && !value.freeEntry && !value.ticketUrl) {
+    if (!soldOut && !freeEntry && !value.ticketUrl) {
       ctx.addIssue({
         code: "custom",
         path: ["ticketUrl"],
@@ -50,6 +85,7 @@ export const showInputSchema = z
   });
 
 export type ShowInput = z.input<typeof showInputSchema>;
+export type ShowParsed = z.output<typeof showInputSchema>;
 
 export const galleryMetaSchema = z.object({
   id: z.string().trim().min(1),

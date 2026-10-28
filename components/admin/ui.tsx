@@ -121,7 +121,21 @@ export function AdminSwitch({
   );
 }
 
-export function StatusBadge({ status }: { status: ShowStatus }) {
+export function StatusBadge({ status, freeEntry }: { status: ShowStatus; freeEntry?: boolean }) {
+  if (freeEntry) {
+    return (
+      <span
+        className={cn(
+          "inline-flex items-center gap-1.5 border px-2 py-1 font-mono text-[8px] tracking-[0.14em]",
+          "border-white/20 bg-white/[0.02] text-bone",
+        )}
+      >
+        <span aria-hidden="true" className="h-1 w-1 bg-bone" />
+        ENTRADA GRATUITA
+      </span>
+    );
+  }
+
   return (
     <span
       className={cn(

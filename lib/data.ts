@@ -23,7 +23,7 @@ export async function getSiteData() {
       supabase
         .from("shows")
         .select(
-          "id, date, time, city, country, venue, ticket_url, status, notes",
+          "id, date, time, city, country, venue, ticket_url, status, notes, free_entry",
         )
         .order("date", { ascending: true }),
       supabase

@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { updateTag } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -50,7 +50,7 @@ async function getAdminContext(): Promise<
   if (!session) {
     return {
       ok: false,
-      error: "Tu sesión expiró. Volvé a entrar para guardar los cambios.",
+      error: "Tu sesiÃ³n expirÃ³. VolvÃ© a entrar para guardar los cambios.",
     };
   }
 
@@ -129,12 +129,36 @@ export async function saveShowAction(
   const contextResult = await getAdminContext();
   if (!contextResult.ok) return fail(contextResult.error);
 
-  const parsed = showInputSchema.safeParse(input);
+  console.log("[admin] saveShowAction input(raw):", JSON.stringify(input));
+
+  const normalized = {
+    ...input,
+    id: input.id === "" ? undefined : input.id,
+    time:
+      typeof (input as any).time === "string" && /^\d{2}:\d{2}:\d{2}$/.test((input as any).time.trim())
+        ? (input as any).time.trim().slice(0, 5)
+        : (input as any).time === null
+          ? ""
+          : typeof (input as any).time === "string"
+            ? (input as any).time.trim()
+            : (input as any).time,
+    ticketUrl: (input as any).ticketUrl === null ? "" : (input as any).ticketUrl,
+    notes: (input as any).notes === null ? "" : (input as any).notes,
+    soldOut: Boolean((input as any).soldOut),
+    freeEntry: Boolean((input as any).freeEntry),
+  };
+
+  console.log("[admin] saveShowAction input(normalized):", JSON.stringify(normalized));
+
+  const parsed = showInputSchema.safeParse(normalized);
   if (!parsed.success) {
+    const flat = parsed.error.flatten();
+    console.error("[admin] saveShowAction VALIDATION FAILED");
+    console.error(JSON.stringify({ formErrors: flat.formErrors, fieldErrors: flat.fieldErrors }, null, 2));
     return {
       ok: false,
       error: "Revisá los datos de la fecha.",
-      fieldErrors: parsed.error.flatten().fieldErrors,
+      fieldErrors: flat.fieldErrors,
     };
   }
 
@@ -149,16 +173,19 @@ export async function saveShowAction(
     ticket_url: value.freeEntry ? "" : value.ticketUrl,
     status: value.soldOut ? ("sold-out" as const) : ("available" as const),
     notes: value.notes || null,
-    free_entry: value.freeEntry,
+    free_entry: Boolean(value.freeEntry),
   };
 
-  const { error } = value.id
-    ? await supabase.from("shows").update(payload).eq("id", value.id)
+  console.log("[admin] saveShowAction payload:", JSON.stringify(payload));
+
+  const showId = value.id && value.id.trim() ? value.id.trim() : null;
+  const { error } = showId
+    ? await supabase.from("shows").update(payload).eq("id", showId)
     : await supabase.from("shows").insert(payload);
 
   if (error) {
     console.error("[admin] save show", error);
-    return fail("No pudimos guardar la fecha. Revisá la tabla shows.");
+    return fail("No pudimos guardar la fecha. RevisÃ¡ la tabla shows.");
   }
 
   updateTag("shows");
@@ -193,12 +220,12 @@ export async function createGalleryUploadUrlAction(input: {
 
   const parsed = galleryUploadInitSchema.safeParse(input);
   if (!parsed.success) {
-    return fail("La imagen supera los 12 MB o el archivo no es válido.");
+    return fail("La imagen supera los 12 MB o el archivo no es vÃ¡lido.");
   }
 
   const extension = imageTypes[parsed.data.contentType];
   if (!extension) {
-    return fail("Usá JPG, PNG, WebP o AVIF.");
+    return fail("UsÃ¡ JPG, PNG, WebP o AVIF.");
   }
 
   const { supabase } = contextResult.context;
@@ -209,7 +236,7 @@ export async function createGalleryUploadUrlAction(input: {
 
   if (error || !data) {
     console.error("[admin] gallery signed url", error);
-    return fail("No pudimos preparar la subida. Revisá el bucket gallery.");
+    return fail("No pudimos preparar la subida. RevisÃ¡ el bucket gallery.");
   }
 
   return {
@@ -235,13 +262,13 @@ export async function finalizeGalleryUploadAction(input: {
   if (!parsed.success) {
     return {
       ok: false,
-      error: "Revisá los datos de la imagen.",
+      error: "RevisÃ¡ los datos de la imagen.",
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
   }
 
   if (!/^gallery\/[a-zA-Z0-9._-]+$/.test(parsed.data.path)) {
-    return fail("La ruta del archivo no es válida.");
+    return fail("La ruta del archivo no es vÃ¡lida.");
   }
 
   const { session, supabase } = contextResult.context;
@@ -272,7 +299,7 @@ export async function finalizeGalleryUploadAction(input: {
   if (error) {
     console.error("[admin] gallery insert", error);
     await supabase.storage.from(GALLERY_BUCKET).remove([parsed.data.path]);
-    return fail("La imagen subió, pero no pudimos guardarla en la galería.");
+    return fail("La imagen subiÃ³, pero no pudimos guardarla en la galerÃ­a.");
   }
 
   updateTag("gallery");
@@ -294,7 +321,7 @@ export async function updateGalleryAction(input: {
   if (!parsed.success) {
     return {
       ok: false,
-      error: "Revisá los datos de la imagen.",
+      error: "RevisÃ¡ los datos de la imagen.",
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
   }
@@ -366,7 +393,7 @@ export async function reorderGalleryAction(
     ids.length > 300 ||
     new Set(ids).size !== ids.length
   ) {
-    return fail("El orden recibido no es válido.");
+    return fail("El orden recibido no es vÃ¡lido.");
   }
 
   const { session, supabase } = contextResult.context;
@@ -398,7 +425,7 @@ export async function saveEpkAction(input: {
   if (!parsed.success) {
     return {
       ok: false,
-      error: "Revisá la biografía y el rider.",
+      error: "RevisÃ¡ la biografÃ­a y el rider.",
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
   }
@@ -437,7 +464,7 @@ export async function createEpkUploadUrlAction(input: {
 
   const parsed = epkUploadInitSchema.safeParse(input);
   if (!parsed.success) {
-    return fail("El archivo supera los 25 MB o los datos no son válidos.");
+    return fail("El archivo supera los 25 MB o los datos no son vÃ¡lidos.");
   }
 
   const isPdf =
@@ -465,7 +492,7 @@ export async function createEpkUploadUrlAction(input: {
 
   if (error || !data) {
     console.error("[admin] epk signed url", error);
-    return fail("No pudimos preparar la subida. Revisá el bucket press.");
+    return fail("No pudimos preparar la subida. RevisÃ¡ el bucket press.");
   }
 
   return {
@@ -485,14 +512,14 @@ export async function finalizeEpkUploadAction(input: {
   if (!contextResult.ok) return fail(contextResult.error);
 
   const parsed = epkFinalizeSchema.safeParse(input);
-  if (!parsed.success) return fail("Los datos del archivo no son válidos.");
+  if (!parsed.success) return fail("Los datos del archivo no son vÃ¡lidos.");
 
   const expectedPrefix = `press/${parsed.data.kind}-`;
   if (
     !parsed.data.path.startsWith(expectedPrefix) ||
     !/^press\/[a-zA-Z0-9._-]+$/.test(parsed.data.path)
   ) {
-    return fail("La ruta del archivo no es válida.");
+    return fail("La ruta del archivo no es vÃ¡lida.");
   }
 
   const { session, supabase } = contextResult.context;
@@ -530,7 +557,7 @@ export async function finalizeEpkUploadAction(input: {
   if (error) {
     console.error("[admin] finalize epk upload", error);
     await supabase.storage.from(PRESS_BUCKET).remove([parsed.data.path]);
-    return fail("El archivo subió, pero no pudimos guardarlo en el press kit.");
+    return fail("El archivo subiÃ³, pero no pudimos guardarlo en el press kit.");
   }
 
   updateTag("epk");

@@ -235,14 +235,14 @@ export function ShowsManager() {
 
     const result = await saveShowAction({
       id: editing?.id,
-      date: form.date,
-      time: form.time,
-      city: form.city,
+      date: form.date.trim(),
+      time: form.time.trim(),
+      city: form.city.trim(),
       country: form.country,
-      venue: form.venue,
-      ticketUrl: form.freeEntry ? "" : form.ticketUrl,
-      soldOut: form.soldOut,
-      freeEntry: form.freeEntry,
+      venue: form.venue.trim(),
+      ticketUrl: form.freeEntry ? "" : form.ticketUrl.trim(),
+      soldOut: Boolean(form.soldOut),
+      freeEntry: Boolean(form.freeEntry),
     } as any);
 
     setSaving(false);
@@ -395,7 +395,14 @@ export function ShowsManager() {
                 </div>
 
                 <div className="flex items-center justify-between gap-4 sm:justify-end">
-                  <StatusBadge status={show.status} />
+                  {show.freeEntry ? (
+                    <span className="inline-flex items-center gap-1.5 border px-2 py-1 font-mono text-[8px] tracking-[0.14em] border-white/20 bg-white/[0.02] text-bone">
+                      <span aria-hidden="true" className="h-1 w-1 bg-bone" />
+                      ENTRADA GRATUITA
+                    </span>
+                  ) : (
+                    <StatusBadge status={show.status} />
+                  )}
                   <div className="flex items-center gap-1">
                     <button
                       type="button"

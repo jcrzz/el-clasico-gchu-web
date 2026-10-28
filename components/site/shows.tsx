@@ -128,6 +128,9 @@ export function Shows({
                 const date = parseShowDate(show.date);
                 const soldOut = show.status === "sold-out";
                 const freeEntry = show.freeEntry ?? false;
+                if (process.env.NODE_ENV === "development") {
+                  console.log("[shows] render", show.id, { freeEntry: show.freeEntry, status: show.status, ticketUrl: show.ticketUrl });
+                }
 
                 return (
                   <motion.article
@@ -169,15 +172,15 @@ export function Shows({
                     </div>
 
                     <div className="col-span-2 md:col-span-1 md:justify-self-end">
-                      {soldOut ? (
-                        <span className="inline-flex w-full items-center justify-center gap-2 border border-white/10 bg-white/[0.02] px-4 py-3 font-mono text-[9px] tracking-[0.14em] text-ash/60 md:w-auto">
-                          <Ticket size={13} aria-hidden="true" />
-                          AGOTADO
-                        </span>
-                      ) : freeEntry ? (
+                      {freeEntry ? (
                         <span className="inline-flex w-full items-center justify-center gap-2 border border-white/20 px-4 py-3 font-mono text-[9px] tracking-[0.14em] text-bone md:w-auto">
                           <Ticket size={13} aria-hidden="true" />
                           ENTRADA LIBRE Y GRATUITA
+                        </span>
+                      ) : soldOut ? (
+                        <span className="inline-flex w-full items-center justify-center gap-2 border border-white/10 bg-white/[0.02] px-4 py-3 font-mono text-[9px] tracking-[0.14em] text-ash/60 md:w-auto">
+                          <Ticket size={13} aria-hidden="true" />
+                          AGOTADO
                         </span>
                       ) : (
                         <a

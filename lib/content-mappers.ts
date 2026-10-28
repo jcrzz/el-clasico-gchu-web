@@ -34,6 +34,7 @@ export interface EpkRow {
 }
 
 export function mapShowRow(row: ShowRow): Show {
+  const freeEntry = (row as any).free_entry ?? (row as any).freeEntry ?? false;
   return {
     id: row.id,
     date: row.date,
@@ -41,10 +42,10 @@ export function mapShowRow(row: ShowRow): Show {
     city: row.city,
     country: row.country,
     venue: row.venue,
-    ticketUrl: row.ticket_url,
+    ticketUrl: row.ticket_url ?? "",
     status: row.status,
     notes: row.notes,
-    freeEntry: row.free_entry ?? false,
+    freeEntry: Boolean(freeEntry),
   };
 }
 
