@@ -146,9 +146,10 @@ export async function saveShowAction(
     city: value.city,
     country: value.country,
     venue: value.venue,
-    ticket_url: value.ticketUrl,
+    ticket_url: value.freeEntry ? "" : value.ticketUrl,
     status: value.soldOut ? ("sold-out" as const) : ("available" as const),
     notes: value.notes || null,
+    free_entry: value.freeEntry,
   };
 
   const { error } = value.id

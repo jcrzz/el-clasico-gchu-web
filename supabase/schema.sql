@@ -19,8 +19,12 @@ create table if not exists public.shows (
   status text not null default 'available'
     check (status in ('available', 'sold-out', 'paused')),
   notes text,
+  free_entry boolean not null default false,
   created_at timestamptz not null default now()
 );
+
+alter table public.shows
+  add column if not exists free_entry boolean not null default false;
 
 create index if not exists shows_date_idx on public.shows (date);
 

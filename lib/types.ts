@@ -12,6 +12,7 @@ export interface Show {
   ticketUrl: string;
   status: ShowStatus;
   notes?: string | null;
+  freeEntry?: boolean;
 }
 
 export type SceneVariant = "guitar" | "band" | "drummer" | "vocalist";

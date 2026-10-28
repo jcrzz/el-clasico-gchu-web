@@ -29,13 +29,22 @@ export const showInputSchema = z
     ticketUrl: httpUrl.optional().default(""),
     notes: z.string().trim().max(400).optional().default(""),
     soldOut: z.boolean().optional().default(false),
+    freeEntry: z.boolean().optional().default(false),
   })
   .superRefine((value, ctx) => {
-    if (!value.soldOut && !value.ticketUrl) {
+    if (value.freeEntry && value.soldOut) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["freeEntry"],
+        message: "Entrada libre y sold out son excluyentes.",
+      });
+    }
+
+    if (!value.soldOut && !value.freeEntry && !value.ticketUrl) {
       ctx.addIssue({
         code: "custom",
         path: ["ticketUrl"],
-        message: "Agregá el link de venta o marcá la fecha como sold out.",
+        message: "Agregá el link de venta, marcá sold out o marcá entrada libre.",
       });
     }
   });

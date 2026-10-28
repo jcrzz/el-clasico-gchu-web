@@ -43,6 +43,7 @@ interface FormValues {
   venue: string;
   ticketUrl: string;
   soldOut: boolean;
+  freeEntry: boolean;
 }
 
 const emptyForm: FormValues = {
@@ -53,6 +54,7 @@ const emptyForm: FormValues = {
   venue: "",
   ticketUrl: "",
   soldOut: false,
+  freeEntry: false,
 };
 
 function parseDate(date: string) {
@@ -83,8 +85,9 @@ function formFromShow(show: Show): FormValues {
     city: show.city,
     country: show.country,
     venue: show.venue,
-    ticketUrl: show.ticketUrl,
+    ticketUrl: show.ticketUrl ?? "",
     soldOut: show.status === "sold-out",
+    freeEntry: show.freeEntry ?? false,
   };
 }
 
@@ -142,8 +145,25 @@ export function ShowsManager() {
     field: K,
     value: FormValues[K],
   ) => {
-    setForm((current) => ({ ...current, [field]: value }));
-    setFieldErrors((current) => ({ ...current, [field]: "" }));
+    setForm((current) => {
+      let next = { ...current, [field]: value };
+
+      if (field === "freeEntry" && value === true) {
+        next = { ...next, freeEntry: true, soldOut: false, ticketUrl: "" };
+      } else if (field === "soldOut" && value === true) {
+        next = { ...next, soldOut: true, freeEntry: false };
+      }
+
+      return next;
+    });
+    setFieldErrors((current) => {
+      const nextErrors = { ...current, [field]: "" };
+      if (field === "freeEntry" || field === "soldOut") {
+        delete nextErrors.freeEntry;
+        delete nextErrors.soldOut;
+      }
+      return nextErrors;
+    });
   };
 
   const validate = () => {
@@ -151,10 +171,14 @@ export function ShowsManager() {
     if (!form.date) errors.date = "Elegí una fecha.";
     if (form.city.trim().length < 2) errors.city = "Indicá la ciudad.";
     if (form.venue.trim().length < 2) errors.venue = "Indicá el venue.";
-    if (!form.soldOut && !form.ticketUrl.trim()) {
-      errors.ticketUrl = "Agregá el link de venta o marcá sold out.";
+    if (form.freeEntry && form.soldOut) {
+      errors.freeEntry = "Entrada libre y sold out son excluyentes.";
+    }
+    if (!form.soldOut && !form.freeEntry && !form.ticketUrl.trim()) {
+      errors.ticketUrl = "Agregá el link de venta, marcá sold out o marcá entrada libre.";
     }
     if (
+      !form.freeEntry &&
       form.ticketUrl.trim() &&
       !/^https?:\/\//i.test(form.ticketUrl.trim())
     ) {
@@ -184,9 +208,10 @@ export function ShowsManager() {
         city: form.city.trim(),
         country: form.country,
         venue: form.venue.trim(),
-        ticketUrl: form.ticketUrl.trim(),
+        ticketUrl: form.freeEntry ? "" : form.ticketUrl.trim(),
         status: form.soldOut ? "sold-out" : "available",
         notes: editing?.notes ?? null,
+        freeEntry: form.freeEntry,
       };
 
       updateData((current) => ({
@@ -215,9 +240,10 @@ export function ShowsManager() {
       city: form.city,
       country: form.country,
       venue: form.venue,
-      ticketUrl: form.ticketUrl,
+      ticketUrl: form.freeEntry ? "" : form.ticketUrl,
       soldOut: form.soldOut,
-    });
+      freeEntry: form.freeEntry,
+    } as any);
 
     setSaving(false);
 
@@ -563,7 +589,7 @@ export function ShowsManager() {
               onChange={(event) => updateField("ticketUrl", event.target.value)}
               aria-invalid={Boolean(fieldErrors.ticketUrl)}
               placeholder="https://..."
-              disabled={form.soldOut}
+              disabled={form.soldOut || form.freeEntry}
               className="field mt-1 disabled:opacity-40"
             />
             {fieldErrors.ticketUrl ? (
@@ -572,18 +598,33 @@ export function ShowsManager() {
               </p>
             ) : (
               <p className="mt-1.5 font-mono text-[8px] text-white/35">
-                PARA SOLD OUT PODÉS DEJARLO VACÍO.
+                PARA SOLD OUT O ENTRADA LIBRE PODÉS DEJARLO VACÍO.
               </p>
             )}
           </div>
 
-          <div className="border border-white/12 bg-white/[0.02] p-4">
-            <AdminSwitch
-              checked={form.soldOut}
-              onChange={(value) => updateField("soldOut", value)}
-              label="SOLD OUT"
-              description="La fecha sigue visible, pero sin botón de compra."
-            />
+          <div className="space-y-3">
+            <div className="border border-white/12 bg-white/[0.02] p-4">
+              <AdminSwitch
+                checked={form.freeEntry}
+                onChange={(value) => updateField("freeEntry", value)}
+                label="ENTRADA LIBRE Y GRATUITA"
+                description="Sin venta online. Se ingresa libremente."
+              />
+              {fieldErrors.freeEntry ? (
+                <p className="mt-2 font-mono text-[8px] text-amber">
+                  {fieldErrors.freeEntry}
+                </p>
+              ) : null}
+            </div>
+            <div className="border border-white/12 bg-white/[0.02] p-4">
+              <AdminSwitch
+                checked={form.soldOut}
+                onChange={(value) => updateField("soldOut", value)}
+                label="SOLD OUT"
+                description="La fecha sigue visible, pero sin botón de compra."
+              />
+            </div>
           </div>
 
           <div className="flex items-start gap-2.5 border border-white/10 bg-white/[0.015] p-3">

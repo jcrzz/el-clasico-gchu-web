@@ -10,6 +10,7 @@ export interface ShowRow {
   ticket_url: string;
   status: Show["status"];
   notes: string | null;
+  free_entry?: boolean | null;
 }
 
 export interface GalleryRow {
@@ -43,6 +44,7 @@ export function mapShowRow(row: ShowRow): Show {
     ticketUrl: row.ticket_url,
     status: row.status,
     notes: row.notes,
+    freeEntry: row.free_entry ?? false,
   };
 }
 

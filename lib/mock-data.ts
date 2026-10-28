@@ -71,6 +71,7 @@ export const shows: Show[] = [
     ticketUrl:
       "https://wa.me/5493446123456?text=Quiero%20entradas%20para%20El%20Cl%C3%A1sico%20en%20Gualeguaych%C3%BA",
     status: "available",
+    freeEntry: false,
   },
   {
     id: "sh-02",
@@ -82,6 +83,7 @@ export const shows: Show[] = [
     ticketUrl:
       "https://wa.me/5493446123456?text=Quiero%20entradas%20para%20El%20Cl%C3%A1sico%20en%20Paran%C3%A1",
     status: "available",
+    freeEntry: false,
   },
   {
     id: "sh-03",
@@ -93,6 +95,7 @@ export const shows: Show[] = [
     ticketUrl:
       "https://wa.me/5493446123456?text=Quiero%20entradas%20para%20El%20Cl%C3%A1sico%20en%20Rosario",
     status: "available",
+    freeEntry: false,
   },
   {
     id: "sh-04",
@@ -104,6 +107,7 @@ export const shows: Show[] = [
     ticketUrl:
       "https://wa.me/5493446123456?text=Quiero%20entradas%20para%20El%20Cl%C3%A1sico%20en%20Buenos%20Aires",
     status: "available",
+    freeEntry: false,
   },
   {
     id: "sh-05",
@@ -115,6 +119,7 @@ export const shows: Show[] = [
     ticketUrl:
       "https://wa.me/5493446123456?text=Quiero%20entradas%20para%20El%20Cl%C3%A1sico%20en%20C%C3%B3rdoba",
     status: "available",
+    freeEntry: false,
   },
   {
     id: "sh-06",
@@ -126,6 +131,7 @@ export const shows: Show[] = [
     ticketUrl:
       "https://wa.me/5493446123456?text=Quiero%20entradas%20para%20El%20Cl%C3%A1sico%20en%20Montevideo",
     status: "available",
+    freeEntry: false,
   },
 ];
 
