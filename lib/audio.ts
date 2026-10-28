@@ -15,9 +15,12 @@ function resolveTrack(track: Track, baseUrl: string | null): Track {
   if (!track.audioFile) return { ...track, audioUrl: null };
 
   if (baseUrl) {
+    // Con Storage/CDN no conocemos la extensión real sin hacer un HEAD request,
+    // así que usamos AUDIO_EXTENSION (default mp3) para armar la URL pública.
+    const ext = process.env.AUDIO_EXTENSION ?? "mp3";
     const file = hasExtension(track.audioFile)
       ? track.audioFile
-      : `${track.audioFile}.m4a`;
+      : `${track.audioFile}.${ext}`;
     return { ...track, audioUrl: `${baseUrl}/${file}` };
   }
 
