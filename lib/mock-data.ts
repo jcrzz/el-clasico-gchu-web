@@ -19,7 +19,7 @@ export const settings: SiteSettings = {
   email: "contacto@elclasico.com",
   pressEmail: "prensa@elclasico.com",
   bookingEmail: "contacto@elclasico.com",
-  whatsapp: "5493446123456",
+  whatsapp: "549344604022",
   whatsappMessage:
     "Hola El Clásico, quiero consultar por shows y entradas.",
   socials: [
@@ -52,7 +52,7 @@ export const shows: Show[] = [
     country: "AR",
     venue: "Centro Cultural",
     ticketUrl:
-      "https://wa.me/5493446123456?text=Quiero%20entradas%20para%20El%20Cl%C3%A1sico%20en%20Gualeguaych%C3%BA",
+      "https://wa.me/549344604022?text=Quiero%20entradas%20para%20El%20Cl%C3%A1sico%20en%20Gualeguaych%C3%BA",
     status: "available",
     freeEntry: false,
   },
@@ -64,7 +64,7 @@ export const shows: Show[] = [
     country: "AR",
     venue: "Sala Mayo",
     ticketUrl:
-      "https://wa.me/5493446123456?text=Quiero%20entradas%20para%20El%20Cl%C3%A1sico%20en%20Paran%C3%A1",
+      "https://wa.me/549344604022?text=Quiero%20entradas%20para%20El%20Cl%C3%A1sico%20en%20Paran%C3%A1",
     status: "available",
     freeEntry: false,
   },
@@ -76,7 +76,7 @@ export const shows: Show[] = [
     country: "AR",
     venue: "Club Distrito Siete",
     ticketUrl:
-      "https://wa.me/5493446123456?text=Quiero%20entradas%20para%20El%20Cl%C3%A1sico%20en%20Rosario",
+      "https://wa.me/549344604022?text=Quiero%20entradas%20para%20El%20Cl%C3%A1sico%20en%20Rosario",
     status: "available",
     freeEntry: false,
   },
@@ -88,7 +88,7 @@ export const shows: Show[] = [
     country: "AR",
     venue: "Vorterix — Capital Federal",
     ticketUrl:
-      "https://wa.me/5493446123456?text=Quiero%20entradas%20para%20El%20Cl%C3%A1sico%20en%20Buenos%20Aires",
+      "https://wa.me/549344604022?text=Quiero%20entradas%20para%20El%20Cl%C3%A1sico%20en%20Buenos%20Aires",
     status: "available",
     freeEntry: false,
   },
@@ -100,7 +100,7 @@ export const shows: Show[] = [
     country: "AR",
     venue: "Quality Espacio",
     ticketUrl:
-      "https://wa.me/5493446123456?text=Quiero%20entradas%20para%20El%20Cl%C3%A1sico%20en%20C%C3%B3rdoba",
+      "https://wa.me/549344604022?text=Quiero%20entradas%20para%20El%20Cl%C3%A1sico%20en%20C%C3%B3rdoba",
     status: "available",
     freeEntry: false,
   },
@@ -112,7 +112,7 @@ export const shows: Show[] = [
     country: "UY",
     venue: "Sala del Museo",
     ticketUrl:
-      "https://wa.me/5493446123456?text=Quiero%20entradas%20para%20El%20Cl%C3%A1sico%20en%20Montevideo",
+      "https://wa.me/549344604022?text=Quiero%20entradas%20para%20El%20Cl%C3%A1sico%20en%20Montevideo",
     status: "available",
     freeEntry: false,
   },
