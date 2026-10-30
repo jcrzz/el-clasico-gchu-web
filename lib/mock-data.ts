@@ -4,8 +4,10 @@ import type {
   Show,
   SiteData,
   SiteSettings,
+  Support,
 } from "./types";
 import { discography } from "./discography";
+import { whatsappUrl } from "./utils";
 
 export const settings: SiteSettings = {
   name: "EL CLÁSICO",
@@ -232,10 +234,57 @@ export const epk: Epk = {
   ],
 };
 
+export const support: Support = {
+  alias: "ELCLASICO.ROCK.MP",
+  cvu: "0000003100012345678901",
+  accountHolder: "El Clásico",
+  qrImageUrl: null,
+  freeAmountLink: whatsappUrl(
+    settings.whatsapp,
+    "Hola El Clásico, quiero hacer un aporte de monto libre al proyecto.",
+  ),
+  tiers: [
+    {
+      id: "t-01",
+      title: "PÚA Y CUERDAS",
+      description: "Aporte base para mantenimiento y sala de ensayo.",
+      amount: 2000,
+      paymentLink: whatsappUrl(
+        settings.whatsapp,
+        "Hola El Clásico, quiero aportar $2.000 con el tier PÚA Y CUERDAS.",
+      ),
+      featured: false,
+    },
+    {
+      id: "t-02",
+      title: "NAFTA PARA LA GIRA",
+      description: "Empujón directo para llevar el show a nuevas ciudades.",
+      amount: 5000,
+      paymentLink: whatsappUrl(
+        settings.whatsapp,
+        "Hola El Clásico, quiero aportar $5.000 con el tier NAFTA PARA LA GIRA.",
+      ),
+      featured: true,
+    },
+    {
+      id: "t-03",
+      title: "FUEGO EN EL ESTUDIO",
+      description: "Bancá la grabación y mezcla de las próximas canciones.",
+      amount: 10000,
+      paymentLink: whatsappUrl(
+        settings.whatsapp,
+        "Hola El Clásico, quiero aportar $10.000 con el tier FUEGO EN EL ESTUDIO.",
+      ),
+      featured: false,
+    },
+  ],
+};
+
 export const mockSiteData: SiteData = {
   settings,
   albums,
   shows,
   gallery,
   epk,
+  support,
 };

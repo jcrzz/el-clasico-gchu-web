@@ -4,7 +4,6 @@ import {
   useEffect,
   useRef,
   useState,
-  type CSSProperties,
   type KeyboardEvent,
 } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
@@ -18,23 +17,16 @@ import {
   Play,
   SkipBack,
   SkipForward,
-  Volume2,
-  VolumeX,
 } from "lucide-react";
 import { usePlayer } from "@/components/audio/audio-provider";
+import { VolumeControl } from "@/components/audio/volume-control";
 import { AlbumCover } from "@/components/art/album-cover";
 import { CropMarks } from "@/components/ui/section-heading";
 import { SpotifyIcon, YouTubeIcon } from "@/components/ui/social-icons";
 import type { Album } from "@/lib/types";
-import { cn, formatTime } from "@/lib/utils";
+import { cn, formatTime, rangeStyle } from "@/lib/utils";
 
 const PANEL_ID = "discography-panel";
-
-function rangeStyle(percent: number) {
-  return {
-    "--range-progress": `${Math.max(0, Math.min(100, percent))}%`,
-  } as CSSProperties;
-}
 
 function Equalizer({
   playing,
@@ -94,8 +86,6 @@ export function Music({ albums }: { albums: Album[] }) {
     isPlaying,
     currentTime,
     duration,
-    volume,
-    muted,
     error,
     knownDurations,
     playTrack,
@@ -103,8 +93,6 @@ export function Music({ albums }: { albums: Album[] }) {
     next,
     previous,
     seek,
-    changeVolume,
-    toggleMute,
     setSessionVisible,
   } = usePlayer();
 
@@ -705,32 +693,7 @@ export function Music({ albums }: { albums: Album[] }) {
                   </button>
 
                   <div className="ml-auto flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={toggleMute}
-                      aria-label={muted ? "Activar sonido" : "Silenciar"}
-                      aria-pressed={muted}
-                      className="flex h-9 w-9 items-center justify-center border border-white/12 text-ash transition-colors hover:border-fire hover:text-bone"
-                    >
-                      {muted || volume === 0 ? (
-                        <VolumeX size={15} aria-hidden="true" />
-                      ) : (
-                        <Volume2 size={15} aria-hidden="true" />
-                      )}
-                    </button>
-                    <input
-                      type="range"
-                      min={0}
-                      max={1}
-                      step={0.01}
-                      value={muted ? 0 : volume}
-                      onChange={(event) =>
-                        changeVolume(Number(event.target.value))
-                      }
-                      aria-label="Volumen"
-                      className="audio-range hidden w-20 md:block"
-                      style={rangeStyle((muted ? 0 : volume) * 100)}
-                    />
+                    <VolumeControl size="md" />
                   </div>
                 </div>
 

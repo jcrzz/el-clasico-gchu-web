@@ -86,6 +86,7 @@ de Vercel. Al finalizar, el servidor valida la ruta y guarda la URL pública.
 | `SUPABASE_SERVICE_ROLE_KEY` | Panel | Sólo servidor: CRUD y uploads firmados |
 | `SUPABASE_GALLERY_BUCKET` | No | Bucket de fotos (default `gallery`) |
 | `SUPABASE_PRESS_BUCKET` | No | Bucket de descargables (default `press`) |
+| `SUPABASE_SUPPORT_BUCKET` | No | Bucket del QR de aportes (default `support`) |
 | `AUDIO_BASE_URL` | No | Base pública de los audios de la discografía |
 | `RESEND_API_KEY` | Producción | Envío del formulario |
 | `CONTACT_TO_EMAIL` | No | Destino de los mensajes |

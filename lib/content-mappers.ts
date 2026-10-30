@@ -1,4 +1,4 @@
-import type { Epk, GalleryImage, Show } from "@/lib/types";
+import type { Epk, GalleryImage, Show, Support, SupportTier } from "@/lib/types";
 
 export interface ShowRow {
   id: string;
@@ -73,5 +73,60 @@ export function mergeEpkRow(row: EpkRow | null, fallback: Epk): Epk {
     rider: row.rider?.length ? row.rider : fallback.rider,
     stagePlotUrl: row.stage_plot_url ?? fallback.stagePlotUrl,
     downloads: row.downloads?.length ? row.downloads : fallback.downloads,
+  };
+}
+
+export interface SupportRow {
+  alias: string | null;
+  cvu: string | null;
+  account_holder: string | null;
+  qr_image_url: string | null;
+  free_amount_link: string | null;
+  tiers: unknown;
+}
+
+function readText(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function mapSupportTiers(value: unknown): SupportTier[] {
+  if (!Array.isArray(value)) return [];
+
+  return value.flatMap((item, index) => {
+    if (!item || typeof item !== "object") return [];
+    const row = item as Record<string, unknown>;
+
+    const title = readText(row.title);
+    const amount = Number(row.amount);
+    if (!title || !Number.isFinite(amount) || amount <= 0) return [];
+
+    return [
+      {
+        id: readText(row.id) || `tier-${index + 1}`,
+        title,
+        description: readText(row.description),
+        amount: Math.round(amount),
+        paymentLink: readText(row.paymentLink ?? row.payment_link),
+        featured: Boolean(row.featured),
+      },
+    ];
+  });
+}
+
+export function mergeSupportRow(
+  row: SupportRow | null,
+  fallback: Support,
+): Support {
+  if (!row) return fallback;
+
+  const tiers = mapSupportTiers(row.tiers);
+
+  return {
+    alias: readText(row.alias) || fallback.alias,
+    cvu: readText(row.cvu) || fallback.cvu,
+    accountHolder: readText(row.account_holder) || fallback.accountHolder,
+    qrImageUrl: readText(row.qr_image_url) || null,
+    freeAmountLink: readText(row.free_amount_link) || fallback.freeAmountLink,
+    tiers: tiers.length ? tiers : fallback.tiers,
   };
 }

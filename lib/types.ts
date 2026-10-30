@@ -106,6 +106,27 @@ export interface SocialLink {
   href: string;
 }
 
+export interface SupportTier {
+  id: string;
+  title: string;
+  description: string;
+  /** Monto sugerido en pesos argentinos. */
+  amount: number;
+  /** Link de pago (Mercado Pago). Vacío cae a WhatsApp. */
+  paymentLink: string;
+  featured: boolean;
+}
+
+export interface Support {
+  alias: string;
+  cvu: string;
+  accountHolder: string;
+  qrImageUrl: string | null;
+  /** Link de pago para el aporte de monto libre. */
+  freeAmountLink: string;
+  tiers: SupportTier[];
+}
+
 export interface SiteSettings {
   name: string;
   tagline: string;
@@ -127,4 +148,5 @@ export interface SiteData {
   shows: Show[];
   gallery: GalleryImage[];
   epk: Epk;
+  support: Support;
 }

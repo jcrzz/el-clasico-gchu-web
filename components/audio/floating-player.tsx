@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, type CSSProperties } from "react";
+import { useEffect } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
   LoaderCircle,
@@ -8,19 +8,12 @@ import {
   Play,
   SkipBack,
   SkipForward,
-  Volume2,
-  VolumeX,
   X,
 } from "lucide-react";
+import { VolumeControl } from "@/components/audio/volume-control";
 import { AlbumCover } from "@/components/art/album-cover";
-import { cn, formatTime } from "@/lib/utils";
+import { cn, formatTime, rangeStyle } from "@/lib/utils";
 import { usePlayer } from "./audio-provider";
-
-function rangeStyle(percent: number) {
-  return {
-    "--range-progress": `${Math.max(0, Math.min(100, percent))}%`,
-  } as CSSProperties;
-}
 
 export function FloatingPlayer() {
   const {
@@ -29,15 +22,11 @@ export function FloatingPlayer() {
     isPlaying,
     currentTime,
     duration,
-    volume,
-    muted,
     sessionVisible,
     toggle,
     next,
     previous,
     seek,
-    changeVolume,
-    toggleMute,
     stop,
   } = usePlayer();
   const reduceMotion = useReducedMotion();
@@ -189,46 +178,11 @@ export function FloatingPlayer() {
                     {formatTime(totalDuration || null)}
                   </span>
 
-                  <button
-                    type="button"
-                    onClick={toggleMute}
-                    aria-label={muted ? "Activar sonido" : "Silenciar"}
-                    aria-pressed={muted}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center border border-white/12 text-ash transition-colors hover:border-fire hover:text-bone sm:hidden"
-                  >
-                    {muted || volume === 0 ? (
-                      <VolumeX size={14} aria-hidden="true" />
-                    ) : (
-                      <Volume2 size={14} aria-hidden="true" />
-                    )}
-                  </button>
+                  <VolumeControl size="sm" variant="mobile" className="sm:hidden" />
                 </div>
 
                 <div className="hidden items-center gap-2 sm:flex">
-                  <button
-                    type="button"
-                    onClick={toggleMute}
-                    aria-label={muted ? "Activar sonido" : "Silenciar"}
-                    aria-pressed={muted}
-                    className="flex h-8 w-8 items-center justify-center border border-white/12 text-ash transition-colors hover:border-fire hover:text-bone"
-                  >
-                    {muted || volume === 0 ? (
-                      <VolumeX size={14} aria-hidden="true" />
-                    ) : (
-                      <Volume2 size={14} aria-hidden="true" />
-                    )}
-                  </button>
-                  <input
-                    type="range"
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    value={muted ? 0 : volume}
-                    onChange={(event) => changeVolume(Number(event.target.value))}
-                    aria-label="Volumen"
-                    className="audio-range w-20"
-                    style={rangeStyle((muted ? 0 : volume) * 100)}
-                  />
+                  <VolumeControl size="sm" variant="desktop" />
                   <button
                     type="button"
                     onClick={stop}

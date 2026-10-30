@@ -24,3 +24,6 @@ export const GALLERY_BUCKET =
 
 export const PRESS_BUCKET =
   process.env.SUPABASE_PRESS_BUCKET?.trim() || "press";
+
+export const SUPPORT_BUCKET =
+  process.env.SUPABASE_SUPPORT_BUCKET?.trim() || "support";

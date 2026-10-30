@@ -8,6 +8,7 @@ import {
   ArrowUpRight,
   CalendarDays,
   FileText,
+  HandCoins,
   Images,
   LayoutDashboard,
   LogOut,
@@ -25,6 +26,7 @@ const navItems = [
   { href: "/admin/shows", label: "Fechas", index: "02", icon: CalendarDays },
   { href: "/admin/galeria", label: "Galería", index: "03", icon: Images },
   { href: "/admin/epk", label: "Press kit", index: "04", icon: FileText },
+  { href: "/admin/apoyos", label: "Aportes", index: "05", icon: HandCoins },
 ] as const;
 
 function isActivePath(pathname: string, href: string) {
@@ -65,6 +67,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
     "/admin/shows": String(activeShows).padStart(2, "0"),
     "/admin/galeria": String(data.gallery.length).padStart(2, "0"),
     "/admin/epk": String(data.epk.downloads.length).padStart(2, "0"),
+    "/admin/apoyos": String(data.support.tiers.length).padStart(2, "0"),
   };
 
   return (

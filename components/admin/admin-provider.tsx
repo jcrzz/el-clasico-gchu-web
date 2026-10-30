@@ -45,6 +45,12 @@ function sanitizeForDemoStorage(data: AdminData, initialData: AdminData): AdminD
         return original ? { ...download, url: original.url } : download;
       }),
     },
+    support: {
+      ...data.support,
+      qrImageUrl: data.support.qrImageUrl?.startsWith("blob:")
+        ? initialData.support.qrImageUrl
+        : data.support.qrImageUrl,
+    },
   };
 }
 
@@ -56,6 +62,8 @@ function isValidDemoData(value: unknown): value is AdminData {
     Array.isArray(candidate.gallery) &&
     Boolean(candidate.epk) &&
     Boolean(candidate.settings) &&
+    Boolean(candidate.support) &&
+    Array.isArray(candidate.support?.tiers) &&
     Array.isArray(candidate.albums)
   );
 }

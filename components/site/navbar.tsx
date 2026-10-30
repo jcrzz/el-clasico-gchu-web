@@ -11,6 +11,7 @@ const links = [
   { href: "#inicio", label: "INICIO" },
   { href: "#historia", label: "HISTORIA" },
   { href: "#la-hermandad", label: "LA HERMANDAD" },
+  { href: "#apoyar", label: "APOYAR" },
   { href: "#musica", label: "MÚSICA" },
   { href: "#shows", label: "SHOWS" },
   { href: "#fotos", label: "FOTOS" },
@@ -114,22 +115,32 @@ export function Navbar({ settings }: { settings: SiteSettings }) {
               aria-hidden="true"
               className="hidden h-1.5 w-1.5 bg-fire sm:block"
             />
-            <span className="hidden font-mono text-[9px] tracking-[0.18em] text-ash lg:inline">
+            <span className="hidden font-mono text-[9px] tracking-[0.18em] text-ash xl:inline">
               GCHÚ · AR
             </span>
           </a>
 
-          <nav className="hidden items-center gap-4 lg:flex xl:gap-6" aria-label="Secciones del sitio">
+          <nav
+            className="hidden items-center gap-3 lg:flex xl:gap-6"
+            aria-label="Secciones del sitio"
+          >
             {links.map((link) => {
               const isActive = active === link.href;
+              const isSupport = link.href === "#apoyar";
               return (
                 <a
                   key={link.href}
                   href={link.href}
                   aria-current={isActive ? "true" : undefined}
                   className={cn(
-                    "group relative py-2 font-mono text-[10px] tracking-[0.13em] transition-colors",
-                    isActive ? "text-bone" : "text-ash hover:text-bone",
+                    "group relative py-2 font-mono text-[9px] tracking-[0.13em] transition-colors xl:text-[10px]",
+                    isSupport
+                      ? isActive
+                        ? "text-fire"
+                        : "text-fire/85 hover:text-fire"
+                      : isActive
+                        ? "text-bone"
+                        : "text-ash hover:text-bone",
                   )}
                 >
                   {link.label}

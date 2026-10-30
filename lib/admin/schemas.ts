@@ -155,3 +155,73 @@ export const epkFinalizeSchema = z.object({
   path: z.string().trim().min(1).max(500),
   size: z.number().int().positive(),
 });
+
+// Aportes / recaudación ------------------------------------------------------
+
+const supportTierSchema = z.object({
+  id: z.string().trim().min(1).max(60).optional(),
+  title: z
+    .string()
+    .trim()
+    .min(2, "Poné un nombre para la forma de aporte.")
+    .max(40),
+  description: z
+    .string()
+    .trim()
+    .min(2, "Agregá una descripción corta.")
+    .max(160),
+  amount: z
+    .number()
+    .int("El monto tiene que ser un número entero.")
+    .min(100, "El monto mínimo es $100.")
+    .max(50_000_000),
+  paymentLink: httpUrl,
+  featured: z.boolean().optional().default(false),
+});
+
+export const supportSaveSchema = z
+  .object({
+    alias: z
+      .string()
+      .trim()
+      .min(3, "El alias es demasiado corto.")
+      .max(60)
+      .regex(
+        /^[A-Za-z0-9._-]+$/,
+        "Usá letras, números, puntos, guiones o guión bajo.",
+      ),
+    cvu: z
+      .string()
+      .trim()
+      .refine(
+        (value) => value === "" || /^\d{22}$/.test(value),
+        "El CVU/CBU tiene 22 dígitos.",
+      ),
+    accountHolder: z.string().trim().min(2, "Indicá el titular.").max(80),
+    freeAmountLink: httpUrl,
+    tiers: z
+      .array(supportTierSchema)
+      .min(1, "Dejá al menos una forma de aporte.")
+      .max(6, "El máximo es 6 formas de aporte."),
+  })
+  .superRefine((value, ctx) => {
+    if (value.tiers.filter((tier) => tier.featured).length > 1) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["tiers"],
+        message: "Sólo una forma de aporte puede estar destacada.",
+      });
+    }
+  });
+
+export type SupportSaveInput = z.input<typeof supportSaveSchema>;
+
+export const supportQrInitSchema = z.object({
+  filename: z.string().trim().min(1).max(180),
+  contentType: z.string().trim().min(1).max(120),
+  size: z.number().int().positive().max(4 * 1024 * 1024),
+});
+
+export const supportQrFinalizeSchema = z.object({
+  path: z.string().trim().min(1).max(500),
+});

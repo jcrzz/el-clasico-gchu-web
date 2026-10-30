@@ -10,10 +10,12 @@ import { History } from "@/components/site/history";
 import { Music } from "@/components/site/music";
 import { Navbar } from "@/components/site/navbar";
 import { Shows } from "@/components/site/shows";
+import { Support } from "@/components/site/support";
 import { getSiteData } from "@/lib/data";
 
 export default async function HomePage() {
-  const { settings, albums, shows, gallery, epk } = await getSiteData();
+  const { settings, albums, shows, gallery, epk, support } =
+    await getSiteData();
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -77,6 +79,7 @@ export default async function HomePage() {
         <Hero shows={shows} />
         <History />
         <Hermandad />
+        <Support support={support} whatsapp={settings.whatsapp} />
         <Music albums={albums} />
         <Shows
           shows={shows}

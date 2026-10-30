@@ -45,6 +45,7 @@ await page.screenshot({ path: `${out}/01-hero.png` });
 for (const [id, name] of [
   ["historia", "02-history"],
   ["la-hermandad", "03-hermandad"],
+  ["apoyar", "03b-support"],
   ["musica", "04-music"],
   ["shows", "05-shows"],
   ["fotos", "06-gallery"],
@@ -78,6 +79,21 @@ await page.locator("#shows").scrollIntoViewIfNeeded();
 await page.getByRole("button", { name: /URUGUAY/ }).click();
 await page.waitForTimeout(600);
 await page.locator("#shows").screenshot({ path: `${out}/11-shows-uruguay.png` });
+
+// Support: free amount + QR modal (el QR sólo existe si hay imagen cargada)
+await page.locator("#apoyar").scrollIntoViewIfNeeded();
+await page.getByLabel("Monto libre en pesos argentinos").fill("12000");
+await page.waitForTimeout(500);
+await page.locator("#apoyar").screenshot({ path: `${out}/15-support-free.png` });
+
+const qrTrigger = page.getByRole("button", { name: /VER QR EN GRANDE/i });
+if (await qrTrigger.count()) {
+  await qrTrigger.first().click();
+  await page.waitForTimeout(600);
+  await page.screenshot({ path: `${out}/16-support-qr.png` });
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(400);
+}
 
 // Gallery lightbox
 await page.locator("#fotos").scrollIntoViewIfNeeded();
@@ -115,6 +131,7 @@ await m.screenshot({ path: `${out}/20-mobile-hero.png` });
 
 for (const [id, name] of [
   ["historia", "21-mobile-history"],
+  ["apoyar", "21b-mobile-support"],
   ["musica", "22-mobile-music"],
   ["shows", "23-mobile-shows"],
   ["fotos", "24-mobile-gallery"],

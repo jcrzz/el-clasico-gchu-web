@@ -63,10 +63,28 @@ insert into public.epk_content (id)
 values ('main')
 on conflict (id) do nothing;
 
+-- Aportes / recaudación ------------------------------------------------------
+create table if not exists public.support_content (
+  id text primary key default 'main',
+  alias text not null default '',
+  cvu text not null default '',
+  account_holder text not null default '',
+  qr_image_url text,
+  free_amount_link text not null default '',
+  tiers jsonb not null default '[]'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
+-- Fila única. Los campos vacíos caen al mock del sitio.
+insert into public.support_content (id)
+values ('main')
+on conflict (id) do nothing;
+
 -- RLS: lectura pública, escritura sólo con service role ----------------------
 alter table public.shows enable row level security;
 alter table public.gallery_images enable row level security;
 alter table public.epk_content enable row level security;
+alter table public.support_content enable row level security;
 
 drop policy if exists "public read shows" on public.shows;
 create policy "public read shows"
@@ -83,6 +101,12 @@ create policy "public read gallery"
 drop policy if exists "public read epk" on public.epk_content;
 create policy "public read epk"
   on public.epk_content for select
+  to anon, authenticated
+  using (true);
+
+drop policy if exists "public read support" on public.support_content;
+create policy "public read support"
+  on public.support_content for select
   to anon, authenticated
   using (true);
 
@@ -109,6 +133,13 @@ values
       'application/x-zip-compressed',
       'application/octet-stream'
     ]
+  ),
+  (
+    'support',
+    'support',
+    true,
+    4194304,
+    array['image/jpeg', 'image/png', 'image/webp']
   )
 on conflict (id) do update set
   public = excluded.public,
@@ -128,6 +159,12 @@ create policy "public read press objects"
   on storage.objects for select
   to public
   using (bucket_id = 'press');
+
+drop policy if exists "public read support objects" on storage.objects;
+create policy "public read support objects"
+  on storage.objects for select
+  to public
+  using (bucket_id = 'support');
 
 -- ---------------------------------------------------------------------------
 -- Después de ejecutar:

@@ -1,8 +1,15 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import type { CSSProperties } from "react";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+export function rangeStyle(percent: number) {
+  return {
+    "--range-progress": `${Math.max(0, Math.min(100, percent))}%`,
+  } as CSSProperties;
 }
 
 const months = [

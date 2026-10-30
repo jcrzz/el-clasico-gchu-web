@@ -7,6 +7,7 @@ const navLeft = [
   { href: "#inicio", label: "INICIO" },
   { href: "#historia", label: "HISTORIA" },
   { href: "#la-hermandad", label: "LA HERMANDAD" },
+  { href: "#apoyar", label: "APOYAR" },
   { href: "#musica", label: "MÚSICA" },
 ];
 

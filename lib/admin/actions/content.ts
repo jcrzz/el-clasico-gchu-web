@@ -11,22 +11,41 @@ import {
   galleryMetaSchema,
   galleryUploadInitSchema,
   showInputSchema,
+  supportQrFinalizeSchema,
+  supportQrInitSchema,
+  supportSaveSchema,
   type ShowInput,
+  type SupportSaveInput,
 } from "@/lib/admin/schemas";
 import { getAdminData } from "@/lib/admin/data";
 import { getAdminSession } from "@/lib/admin/auth";
 import type { AdminActionResult, AdminSession } from "@/lib/admin/types";
-import { mergeEpkRow, type EpkRow } from "@/lib/content-mappers";
+import {
+  mergeEpkRow,
+  mergeSupportRow,
+  type EpkRow,
+  type SupportRow,
+} from "@/lib/content-mappers";
 import { mockSiteData } from "@/lib/mock-data";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { GALLERY_BUCKET, PRESS_BUCKET } from "@/lib/supabase/config";
-import type { Epk, EpkDownload, GalleryImage } from "@/lib/types";
+import {
+  GALLERY_BUCKET,
+  PRESS_BUCKET,
+  SUPPORT_BUCKET,
+} from "@/lib/supabase/config";
+import type { Epk, EpkDownload, GalleryImage, Support } from "@/lib/types";
 
 const imageTypes: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
   "image/avif": "avif",
+};
+
+const qrTypes: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
 };
 
 const pdfTypes = new Set(["application/pdf", "application/x-pdf"]);
@@ -112,6 +131,35 @@ async function writeEpk(supabase: SupabaseClient, epk: Epk) {
       rider: epk.rider,
       stage_plot_url: epk.stagePlotUrl,
       downloads: epk.downloads,
+    },
+    { onConflict: "id" },
+  );
+}
+
+async function readSupport(supabase: SupabaseClient): Promise<Support> {
+  const { data, error } = await supabase
+    .from("support_content")
+    .select("alias, cvu, account_holder, qr_image_url, free_amount_link, tiers")
+    .eq("id", "main")
+    .maybeSingle();
+
+  return mergeSupportRow(
+    (!error ? data : null) as SupportRow | null,
+    mockSiteData.support,
+  );
+}
+
+async function writeSupport(supabase: SupabaseClient, support: Support) {
+  return supabase.from("support_content").upsert(
+    {
+      id: "main",
+      alias: support.alias,
+      cvu: support.cvu,
+      account_holder: support.accountHolder,
+      qr_image_url: support.qrImageUrl,
+      free_amount_link: support.freeAmountLink,
+      tiers: support.tiers,
+      updated_at: new Date().toISOString(),
     },
     { onConflict: "id" },
   );
@@ -561,5 +609,161 @@ export async function finalizeEpkUploadAction(input: {
   }
 
   updateTag("epk");
+  return resultWithData(session);
+}
+
+export async function saveSupportAction(
+  input: SupportSaveInput,
+): Promise<AdminActionResult> {
+  const contextResult = await getAdminContext();
+  if (!contextResult.ok) return fail(contextResult.error);
+
+  const parsed = supportSaveSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: "Revisá los datos de recaudación.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+
+  const { session, supabase } = contextResult.context;
+  const current = await readSupport(supabase);
+
+  const tiers = parsed.data.tiers.map((tier) => ({
+    id: tier.id ?? crypto.randomUUID(),
+    title: tier.title,
+    description: tier.description,
+    amount: tier.amount,
+    paymentLink: tier.paymentLink,
+    featured: Boolean(tier.featured),
+  }));
+
+  const { error } = await writeSupport(supabase, {
+    ...current,
+    alias: parsed.data.alias,
+    cvu: parsed.data.cvu,
+    accountHolder: parsed.data.accountHolder,
+    freeAmountLink: parsed.data.freeAmountLink,
+    tiers,
+  });
+
+  if (error) {
+    console.error("[admin] save support", error);
+    return fail(
+      "No pudimos guardar la recaudación. Revisá la tabla support_content.",
+    );
+  }
+
+  updateTag("support");
+  return resultWithData(session);
+}
+
+export async function createSupportQrUploadUrlAction(input: {
+  filename: string;
+  contentType: string;
+  size: number;
+}) {
+  const contextResult = await getAdminContext();
+  if (!contextResult.ok) return fail(contextResult.error);
+
+  const parsed = supportQrInitSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail("La imagen supera los 4 MB o el archivo no es válido.");
+  }
+
+  const extension = qrTypes[parsed.data.contentType];
+  if (!extension) {
+    return fail("Usá PNG, JPG o WebP para el QR.");
+  }
+
+  const { supabase } = contextResult.context;
+  const path = `support/qr-${Date.now()}-${crypto.randomUUID()}.${extension}`;
+  const { data, error } = await supabase.storage
+    .from(SUPPORT_BUCKET)
+    .createSignedUploadUrl(path);
+
+  if (error || !data) {
+    console.error("[admin] support qr signed url", error);
+    return fail("No pudimos preparar la subida. Revisá el bucket support.");
+  }
+
+  return {
+    ok: true,
+    path: data.path,
+    token: data.token,
+    bucket: SUPPORT_BUCKET,
+  };
+}
+
+export async function finalizeSupportQrUploadAction(input: {
+  path: string;
+}): Promise<AdminActionResult> {
+  const contextResult = await getAdminContext();
+  if (!contextResult.ok) return fail(contextResult.error);
+
+  const parsed = supportQrFinalizeSchema.safeParse(input);
+  if (!parsed.success) return fail("Los datos del archivo no son válidos.");
+
+  if (
+    !parsed.data.path.startsWith("support/qr-") ||
+    !/^support\/[a-zA-Z0-9._-]+$/.test(parsed.data.path)
+  ) {
+    return fail("La ruta del archivo no es válida.");
+  }
+
+  const { session, supabase } = contextResult.context;
+  const { data: publicUrlData } = supabase.storage
+    .from(SUPPORT_BUCKET)
+    .getPublicUrl(parsed.data.path);
+
+  const current = await readSupport(supabase);
+  const previousPath = storagePathFromPublicUrl(
+    current.qrImageUrl,
+    SUPPORT_BUCKET,
+  );
+
+  const { error } = await writeSupport(supabase, {
+    ...current,
+    qrImageUrl: publicUrlData.publicUrl,
+  });
+
+  if (error) {
+    console.error("[admin] finalize support qr", error);
+    await supabase.storage.from(SUPPORT_BUCKET).remove([parsed.data.path]);
+    return fail("La imagen subió, pero no pudimos guardarla.");
+  }
+
+  if (previousPath && previousPath !== parsed.data.path) {
+    await supabase.storage.from(SUPPORT_BUCKET).remove([previousPath]);
+  }
+
+  updateTag("support");
+  return resultWithData(session);
+}
+
+export async function removeSupportQrAction(): Promise<AdminActionResult> {
+  const contextResult = await getAdminContext();
+  if (!contextResult.ok) return fail(contextResult.error);
+
+  const { session, supabase } = contextResult.context;
+  const current = await readSupport(supabase);
+  const path = storagePathFromPublicUrl(current.qrImageUrl, SUPPORT_BUCKET);
+
+  const { error } = await writeSupport(supabase, {
+    ...current,
+    qrImageUrl: null,
+  });
+
+  if (error) {
+    console.error("[admin] remove support qr", error);
+    return fail("No pudimos quitar el QR.");
+  }
+
+  if (path) {
+    await supabase.storage.from(SUPPORT_BUCKET).remove([path]);
+  }
+
+  updateTag("support");
   return resultWithData(session);
 }

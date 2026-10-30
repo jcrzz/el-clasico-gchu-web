@@ -6,11 +6,11 @@ import {
   ArrowUpRight,
   CalendarDays,
   FileText,
+  HandCoins,
   Images,
   Radio,
   Ticket,
 } from "lucide-react";
-import { LiveScene } from "@/components/art/live-scene";
 import { nextShow, sortShows } from "@/lib/admin/format";
 import { cn } from "@/lib/utils";
 import { useAdmin } from "./admin-provider";
@@ -57,6 +57,10 @@ export function DashboardHome() {
       label: "DESCARGABLES",
       value: String(data.epk.downloads.length).padStart(2, "0"),
     },
+    {
+      label: "FORMAS DE APORTE",
+      value: String(data.support.tiers.length).padStart(2, "0"),
+    },
   ];
 
   return (
@@ -75,7 +79,7 @@ export function DashboardHome() {
 
       <section
         aria-label="Resumen de contenido"
-        className="grid grid-cols-2 border-l border-t border-white/12 lg:grid-cols-4"
+        className="grid grid-cols-2 border-l border-t border-white/12 lg:grid-cols-5"
       >
         {stats.map((stat) => (
           <div
@@ -219,6 +223,68 @@ export function DashboardHome() {
           <section className="border border-white/12 bg-carbon">
             <div className="border-b border-white/10 px-5 py-3.5">
               <p className="font-mono text-[9px] tracking-[0.18em] text-ash">
+                ACCESOS DIRECTOS
+              </p>
+            </div>
+            <div className="divide-y divide-white/10">
+              {[
+                {
+                  href: "/admin/shows",
+                  label: "FECHAS",
+                  detail: `${active} publicadas`,
+                  icon: CalendarDays,
+                },
+                {
+                  href: "/admin/galeria",
+                  label: "GALERÍA",
+                  detail: `${data.gallery.length} imágenes`,
+                  icon: Images,
+                },
+                {
+                  href: "/admin/epk",
+                  label: "PRESS KIT",
+                  detail: `${data.epk.downloads.length} descargables`,
+                  icon: FileText,
+                },
+                {
+                  href: "/admin/apoyos",
+                  label: "APORTES",
+                  detail: `${data.support.tiers.length} formas`,
+                  icon: HandCoins,
+                },
+              ].map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="group flex items-center gap-3 px-5 py-4 transition-colors hover:bg-white/[0.025]"
+                  >
+                    <Icon
+                      size={15}
+                      className="text-ash transition-colors group-hover:text-fire"
+                      aria-hidden="true"
+                    />
+                    <span className="flex-1 font-mono text-[9px] tracking-[0.12em] text-bone">
+                      {item.label}
+                    </span>
+                    <span className="font-mono text-[8px] text-white/35">
+                      {item.detail}
+                    </span>
+                    <ArrowRight
+                      size={12}
+                      className="text-white/30 transition-transform group-hover:translate-x-0.5 group-hover:text-amber"
+                      aria-hidden="true"
+                    />
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="border border-white/12 bg-carbon">
+            <div className="border-b border-white/10 px-5 py-3.5">
+              <p className="font-mono text-[9px] tracking-[0.18em] text-ash">
                 ESTADO DEL SISTEMA
               </p>
             </div>
@@ -269,91 +335,6 @@ export function DashboardHome() {
                 </a>
               </div>
             </div>
-          </section>
-
-          <section className="border border-white/12 bg-carbon">
-            <div className="border-b border-white/10 px-5 py-3.5">
-              <p className="font-mono text-[9px] tracking-[0.18em] text-ash">
-                ACCESOS DIRECTOS
-              </p>
-            </div>
-            <div className="divide-y divide-white/10">
-              {[
-                {
-                  href: "/admin/shows",
-                  label: "FECHAS",
-                  detail: `${active} publicadas`,
-                  icon: CalendarDays,
-                },
-                {
-                  href: "/admin/galeria",
-                  label: "GALERÍA",
-                  detail: `${data.gallery.length} imágenes`,
-                  icon: Images,
-                },
-                {
-                  href: "/admin/epk",
-                  label: "PRESS KIT",
-                  detail: `${data.epk.downloads.length} descargables`,
-                  icon: FileText,
-                },
-              ].map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="group flex items-center gap-3 px-5 py-4 transition-colors hover:bg-white/[0.025]"
-                  >
-                    <Icon
-                      size={15}
-                      className="text-ash transition-colors group-hover:text-fire"
-                      aria-hidden="true"
-                    />
-                    <span className="flex-1 font-mono text-[9px] tracking-[0.12em] text-bone">
-                      {item.label}
-                    </span>
-                    <span className="font-mono text-[8px] text-white/35">
-                      {item.detail}
-                    </span>
-                    <ArrowRight
-                      size={12}
-                      className="text-white/30 transition-transform group-hover:translate-x-0.5 group-hover:text-amber"
-                      aria-hidden="true"
-                    />
-                  </Link>
-                );
-              })}
-            </div>
-          </section>
-
-          <section className="relative overflow-hidden border border-white/12 bg-carbon">
-            <div className="grid h-28 grid-cols-3">
-              {data.gallery.slice(0, 3).map((image) =>
-                image.src ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    key={image.id}
-                    src={image.src}
-                    alt=""
-                    className="h-full w-full object-cover opacity-70"
-                  />
-                ) : (
-                  <LiveScene
-                    key={image.id}
-                    variant={image.scene}
-                    className="h-full w-full opacity-70"
-                  />
-                ),
-              )}
-            </div>
-            <Link
-              href="/admin/galeria"
-              className="flex items-center justify-between gap-3 border-t border-white/10 px-5 py-3 font-mono text-[8px] tracking-[0.12em] text-ash transition-colors hover:text-amber"
-            >
-              ABRIR ARCHIVO VISUAL
-              <ArrowRight size={12} aria-hidden="true" />
-            </Link>
           </section>
         </div>
       </div>

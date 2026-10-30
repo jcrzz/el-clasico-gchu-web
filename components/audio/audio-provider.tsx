@@ -44,7 +44,9 @@ interface PlayerContextValue {
 
 const PlayerContext = createContext<PlayerContextValue | null>(null);
 
-const VOLUME_KEY = "elc-player-volume";
+const VOLUME_KEY = "elc-player-volume-v2";
+
+export const DEFAULT_VOLUME = 0.8;
 
 export function AudioProvider({
   albums,
@@ -66,11 +68,12 @@ export function AudioProvider({
   const [status, setStatus] = useState<PlayerStatus>("idle");
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
+  const [volume, setVolume] = useState(DEFAULT_VOLUME);
   const [muted, setMuted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sessionVisible, setSessionVisibleState] = useState(false);
   const [knownDurations, setKnownDurations] = useState<Record<string, number>>({});
+  const volumeReady = useRef(false);
 
   const startPlayback = useCallback(
     (album: Album, track: Track, autoplay = true) => {
@@ -237,21 +240,29 @@ export function AudioProvider({
     const audio = audioRef.current;
     if (!audio) return;
 
-    let stored: number;
+    let stored: number | null = null;
     try {
-      stored = Number(window.localStorage.getItem(VOLUME_KEY));
+      const raw = window.localStorage.getItem(VOLUME_KEY);
+      const parsed = raw === null ? Number.NaN : Number(raw);
+      if (Number.isFinite(parsed) && parsed >= 0 && parsed <= 1) {
+        stored = parsed;
+      }
     } catch {
-      return;
+      // Sin acceso a localStorage seguimos con el volumen por defecto.
     }
 
-    if (!Number.isFinite(stored) || stored < 0 || stored > 1) return;
-
-    audio.volume = stored;
-    const frame = window.requestAnimationFrame(() => setVolume(stored));
+    const initial = stored ?? DEFAULT_VOLUME;
+    audio.volume = initial;
+    audio.muted = false;
+    const frame = window.requestAnimationFrame(() => {
+      volumeReady.current = true;
+      setVolume(initial);
+    });
     return () => window.cancelAnimationFrame(frame);
   }, []);
 
   useEffect(() => {
+    if (!volumeReady.current) return;
     try {
       window.localStorage.setItem(VOLUME_KEY, String(volume));
     } catch {
