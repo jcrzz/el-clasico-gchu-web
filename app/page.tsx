@@ -12,10 +12,12 @@ import { Navbar } from "@/components/site/navbar";
 import { Shows } from "@/components/site/shows";
 import { Support } from "@/components/site/support";
 import { getSiteData } from "@/lib/data";
+import { splitShowsByDate } from "@/lib/shows";
 
 export default async function HomePage() {
-  const { settings, albums, shows, gallery, epk, support } =
+  const { settings, albums, shows, gallery, epk, support, today } =
     await getSiteData();
+  const { upcoming } = splitShowsByDate(shows, today);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -42,7 +44,7 @@ export default async function HomePage() {
         position: Number(track.number),
       })),
     })),
-    event: shows
+    event: upcoming
       .filter((show) => show.status !== "paused")
       .map((show) => ({
         "@type": "MusicEvent",
@@ -76,13 +78,14 @@ export default async function HomePage() {
     <AudioProvider albums={albums}>
       <Navbar settings={settings} />
       <main id="contenido">
-        <Hero shows={shows} />
+        <Hero shows={upcoming} />
         <History />
         <Hermandad />
         <Support support={support} whatsapp={settings.whatsapp} />
         <Music albums={albums} />
         <Shows
           shows={shows}
+          serverToday={today}
           whatsapp={settings.whatsapp}
           whatsappMessage={settings.whatsappMessage}
         />

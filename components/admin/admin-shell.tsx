@@ -60,7 +60,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const [resetArmed, setResetArmed] = useState(false);
 
   const activeShows = data.shows.filter(
-    (show) => show.status !== "paused",
+    (show) => show.status !== "paused" && show.date >= new Date().toISOString().slice(0, 10),
   ).length;
   const counts: Record<string, string> = {
     "/admin": String(activeShows).padStart(2, "0"),

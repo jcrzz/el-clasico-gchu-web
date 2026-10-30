@@ -1,20 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import {
-  ArrowRight,
-  ArrowUpRight,
-  CalendarDays,
-  FileText,
-  HandCoins,
-  Images,
-  Radio,
-  Ticket,
-} from "lucide-react";
-import { nextShow, sortShows } from "@/lib/admin/format";
+import { ArrowRight, ArrowUpRight, CalendarDays, CalendarPlus, FileText, HandCoins, Images, Radio, Ticket } from "lucide-react";
+import { splitShowsByDate } from "@/lib/shows";
+import { useToday } from "@/lib/use-today";
 import { cn } from "@/lib/utils";
 import { useAdmin } from "./admin-provider";
-import { AdminEmpty, AdminPageHeader, StatusBadge } from "./ui";
+import { ArchiveBadge, AdminPageHeader, StatusBadge } from "./ui";
 
 function dateParts(date: string) {
   const parsed = new Date(`${date}T12:00:00-03:00`);
@@ -39,18 +31,24 @@ function dateParts(date: string) {
 
 export function DashboardHome() {
   const { data, session, isDemo } = useAdmin();
-  const upcoming = nextShow(data.shows);
-  const sorted = sortShows(data.shows).filter(
+  const today = useToday();
+  const { upcoming, past } = splitShowsByDate(data.shows, today);
+  const activeUpcoming = upcoming.filter(
     (show) => show.status !== "paused",
   );
-  const soldOut = data.shows.filter(
+  const next = activeUpcoming[0] ?? null;
+  const soldOut = activeUpcoming.filter(
     (show) => show.status === "sold-out",
   ).length;
-  const active = data.shows.filter((show) => show.status !== "paused").length;
-  const nextDate = upcoming ? dateParts(upcoming.date) : null;
+  const active = activeUpcoming.length;
+  const nextDate = next ? dateParts(next.date) : null;
 
   const stats = [
-    { label: "FECHAS ACTIVAS", value: String(active).padStart(2, "0") },
+    {
+      label: "FECHAS ACTIVAS",
+      value: String(active).padStart(2, "0"),
+      detail: `${String(past.length).padStart(2, "0")} EN ARCHIVO`,
+    },
     { label: "SOLD OUT", value: String(soldOut).padStart(2, "0") },
     { label: "IMÁGENES", value: String(data.gallery.length).padStart(2, "0") },
     {
@@ -104,10 +102,10 @@ export function DashboardHome() {
               <p className="font-mono text-[9px] tracking-[0.18em] text-fire">
                 PRÓXIMA FECHA
               </p>
-              {upcoming ? <StatusBadge status={upcoming.status} /> : null}
+              {next ? <StatusBadge status={next.status} /> : null}
             </div>
 
-            {upcoming && nextDate ? (
+            {next && nextDate ? (
               <div className="grid gap-6 p-5 sm:grid-cols-[auto_1fr] sm:p-7">
                 <div className="flex items-end gap-3 border-b border-white/10 pb-5 sm:block sm:border-b-0 sm:border-r sm:pb-0 sm:pr-8">
                   <p className="display text-[clamp(5rem,11vw,8.5rem)] leading-[0.7] text-bone">
@@ -126,11 +124,11 @@ export function DashboardHome() {
                 <div className="flex flex-col justify-between gap-6">
                   <div>
                     <p className="display text-[clamp(2.2rem,4.8vw,4.2rem)] leading-[0.85] text-bone">
-                      {upcoming.city}
+                      {next.city}
                     </p>
                     <p className="mt-2 text-[0.92rem] text-ash">
-                      {upcoming.venue}
-                      {upcoming.time ? ` / ${upcoming.time} HS` : ""}
+                      {next.venue}
+                      {next.time ? ` / ${next.time} HS` : ""}
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-3">
@@ -138,9 +136,9 @@ export function DashboardHome() {
                       EDITAR FECHA
                       <ArrowRight size={13} aria-hidden="true" />
                     </Link>
-                    {upcoming.ticketUrl ? (
+                    {next.ticketUrl ? (
                       <a
-                        href={upcoming.ticketUrl}
+                        href={next.ticketUrl}
                         target="_blank"
                         rel="noreferrer noopener"
                         className="inline-flex items-center gap-1.5 font-mono text-[9px] tracking-[0.12em] text-ash transition-colors hover:text-amber"
@@ -154,15 +152,22 @@ export function DashboardHome() {
               </div>
             ) : (
               <div className="p-5 sm:p-7">
-                <AdminEmpty
-                  title="Sin fechas cargadas"
-                  description="Cuando agregues la próxima fecha, va a aparecer acá y en el sitio público."
-                  action={
-                    <Link href="/admin/shows" className="btn btn-fire">
-                      AGREGAR FECHA
-                    </Link>
-                  }
-                />
+                <div className="flex flex-col items-start gap-3 text-amber">
+                  <ArchiveBadge />
+                  <p className="font-mono text-[10px] tracking-[0.16em]">
+                    SIN FECHAS PROGRAMADAS EN RUTA
+                  </p>
+                  <p className="text-[0.84rem] text-ash">
+                    Cuando agregues la próxima fecha, va a aparecer acá y en el sitio público.
+                  </p>
+                </div>
+                <Link
+                  href="/admin/shows?nueva=1"
+                  className="btn btn-fire inline-flex items-center gap-2"
+                >
+                  <CalendarPlus size={14} aria-hidden="true" />
+                  PROGRAMAR FECHA
+                </Link>
               </div>
             )}
           </section>
@@ -179,9 +184,9 @@ export function DashboardHome() {
                 VER TODAS
               </Link>
             </div>
-            {sorted.length ? (
+            {past.length > 0 ? (
               <ul className="divide-y divide-white/10">
-                {sorted.slice(0, 5).map((show) => {
+                {past.slice(0, 5).map((show) => {
                   const parts = dateParts(show.date);
                   return (
                     <li
@@ -192,28 +197,28 @@ export function DashboardHome() {
                         <span className="display text-2xl text-bone">
                           {parts.day}
                         </span>
-                        <span className="font-mono text-[8px] text-fire">
+                        <span className="font-mono text-[8px] text-fire/60">
                           {parts.month}
                         </span>
                       </div>
                       <div className="min-w-0">
-                        <p className="truncate text-[0.86rem] text-bone">
+                        <p className="truncate text-[0.86rem] text-bone/80">
                           {show.city}
-                          <span className="text-ash"> / {show.venue}</span>
+                          <span className="text-ash/60"> / {show.venue}</span>
                         </p>
-                        <p className="font-mono text-[8px] tracking-[0.1em] text-white/40">
+                        <p className="font-mono text-[8px] tracking-[0.1em] text-white/30">
                           {show.country === "AR" ? "ARGENTINA" : "URUGUAY"}
                           {show.time ? ` / ${show.time}` : ""}
                         </p>
                       </div>
-                      <StatusBadge status={show.status} />
+                      <ArchiveBadge year={show.date.slice(0, 4)} />
                     </li>
                   );
                 })}
               </ul>
             ) : (
               <div className="px-5 py-8 text-[0.82rem] text-ash sm:px-7">
-                No hay funciones cargadas.
+                No hay funciones realizadas.
               </div>
             )}
           </section>

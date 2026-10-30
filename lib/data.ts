@@ -11,6 +11,7 @@ import {
   type SupportRow,
 } from "./content-mappers";
 import { mockSiteData } from "./mock-data";
+import { todayInArgentina } from "./shows";
 import { getSupabaseServer } from "./supabase/server";
 
 export async function getSiteData() {
@@ -18,9 +19,13 @@ export async function getSiteData() {
   cacheLife("hours");
   cacheTag("site-data", "shows", "gallery", "epk", "support");
 
+  // El día se calcula dentro del scope cacheado: así el HTML prerenderizado es
+  // estable y el cliente puede corregirlo al hidratar si cruzó la medianoche.
+  const today = todayInArgentina();
   const base = {
     ...mockSiteData,
     albums: withResolvedAudio(mockSiteData.albums),
+    today,
   };
 
   const supabase = getSupabaseServer();

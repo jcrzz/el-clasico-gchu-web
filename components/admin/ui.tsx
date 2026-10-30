@@ -163,6 +163,15 @@ export function StatusBadge({ status, freeEntry }: { status: ShowStatus; freeEnt
   );
 }
 
+export function ArchiveBadge({ year }: { year?: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 border border-white/15 bg-white/[0.02] px-2 py-1 font-mono text-[8px] tracking-[0.14em] text-ash">
+      <span aria-hidden="true" className="h-1 w-1 bg-fire/70" />
+      FINALIZADO{year ? ` // ${year}` : ""}
+    </span>
+  );
+}
+
 export function AdminPageHeader({
   index,
   title,

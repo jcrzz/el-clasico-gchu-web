@@ -12,10 +12,14 @@ import {
 } from "lucide-react";
 import { deleteShowAction, saveShowAction } from "@/lib/admin/actions/content";
 import { sortShows } from "@/lib/admin/format";
-import type { Show } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { splitShowsByDate } from "@/lib/shows";
+import type { ShowInput } from "@/lib/admin/schemas";
+import { useToday } from "@/lib/use-today";
 import { useAdmin } from "./admin-provider";
+import type { Show } from "@/lib/types";
 import {
+  ArchiveBadge,
   AdminDialog,
   AdminEmpty,
   AdminNotice,
@@ -106,14 +110,16 @@ export function ShowsManager() {
   const [deleteTarget, setDeleteTarget] = useState<Show | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    if (!notice || notice.tone === "error") return;
-    const timer = window.setTimeout(() => setNotice(null), 5000);
-    return () => window.clearTimeout(timer);
-  }, [notice]);
+  const today = useToday();
 
-  const shows = useMemo(() => {
-    const sorted = sortShows(data.shows).filter(
+  // Clasificamos siempre que el dato o el día cambian
+  const { upcoming, past } = useMemo(() => {
+    return splitShowsByDate(data.shows, today);
+  }, [data.shows, today]);
+
+  // Shows visibles en la lista (próximos no pausados)
+  const upcomingFiltered = useMemo(() => {
+    const sorted = upcoming.filter(
       (show) => show.status !== "paused",
     );
     if (filter === "AR" || filter === "UY") {
@@ -123,7 +129,14 @@ export function ShowsManager() {
       return sorted.filter((show) => show.status === "sold-out");
     }
     return sorted;
-  }, [data.shows, filter]);
+  }, [upcoming, filter]);
+
+  const activeCount = upcomingFiltered.length;
+  useEffect(() => {
+    if (!notice || notice.tone === "error") return;
+    const timer = window.setTimeout(() => setNotice(null), 5000);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
 
   const openNew = () => {
     setEditing(null);
@@ -174,7 +187,11 @@ export function ShowsManager() {
     if (form.freeEntry && form.soldOut) {
       errors.freeEntry = "Entrada libre y sold out son excluyentes.";
     }
-    if (!form.soldOut && !form.freeEntry && !form.ticketUrl.trim()) {
+    if (
+      !form.soldOut &&
+      !form.freeEntry &&
+      !form.ticketUrl.trim()
+    ) {
       errors.ticketUrl = "Agregá el link de venta, marcá sold out o marcá entrada libre.";
     }
     if (
@@ -243,7 +260,7 @@ export function ShowsManager() {
       ticketUrl: form.freeEntry ? "" : form.ticketUrl.trim(),
       soldOut: Boolean(form.soldOut),
       freeEntry: Boolean(form.freeEntry),
-    } as any);
+    } satisfies ShowInput);
 
     setSaving(false);
 
@@ -339,119 +356,258 @@ export function ShowsManager() {
             </button>
           ))}
         </div>
-        <p className="font-mono text-[8px] tracking-[0.12em] text-white/35">
-          {shows.length} {shows.length === 1 ? "FECHA" : "FECHAS"} EN PANTALLA
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="font-mono text-[8px] tracking-[0.12em] text-white/35">
+            {activeCount} {activeCount === 1 ? "FECHA" : "FECHAS"} EN PANTALLA
+          </p>
+          <span className="font-mono text-[8px] text-white/30">
+            {past.length > 0 ? `· ${past.length} EN ARCHIVO` : ""}
+          </span>
+        </div>
       </div>
 
-      {shows.length ? (
-        <ul className="border-t border-white/12">
-          {shows.map((show) => {
-            const parts = parseDate(show.date);
-            return (
-              <li
-                key={show.id}
-                className="show-row grid gap-4 border-b border-white/10 px-3 py-4 sm:grid-cols-[100px_1fr_auto] sm:items-center sm:px-4"
+      {/* ==================== TAB ==================== */}
+      <div className="mt-6 flex flex-col gap-6">
+        {/* TAB PRÓXIMAS FECHAS */}
+        <section className="border border-white/12 bg-carbon">
+          <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3.5">
+            <div>
+              <p className="font-mono text-[9px] tracking-[0.2em] text-fire">
+                PRÓXIMAS FECHAS
+              </p>
+              <p className="font-mono text-[8px] text-white/60">
+                {activeCount} {activeCount === 1 ? "FECHA" : "FECHAS"}{past.length > 0 ? ` · ${past.length} EN ARCHIVO` : ""}
+              </p>
+            </div>
+            {session.writeEnabled && (
+              <button
+                type="button"
+                onClick={openNew}
+                className="btn btn-fire text-[9px] tracking-[0.12em] transition-colors"
               >
-                <div className="flex items-end gap-2 sm:block">
-                  <p className="display text-[2.4rem] leading-[0.8] text-bone">
-                    {parts.day}
-                  </p>
-                  <div className="pb-0.5 sm:mt-1 sm:pb-0">
-                    <p className="font-mono text-[8px] tracking-[0.16em] text-fire">
-                      {parts.month}
-                    </p>
-                    <p className="font-mono text-[8px] tracking-[0.1em] text-white/35">
-                      {parts.year}
-                      {show.time ? ` / ${show.time}` : ""}
-                    </p>
-                  </div>
-                </div>
+                <Plus size={12} aria-hidden="true" />
+                AGREGAR
+              </button>
+            )}
+          </div>
+          {activeCount ? (
+            <ul className="divide-y divide-white/10">
+              {upcomingFiltered.map((show) => {
+                const parts = parseDate(show.date);
+                return (
+                  <li
+                    key={show.id}
+                    className="show-row grid gap-4 border-b border-white/10 px-3 py-4 sm:grid-cols-[100px_1fr_auto] sm:items-center sm:px-4"
+                  >
+                    <div className="flex items-end gap-2 sm:block">
+                      <p className="display text-[2.4rem] leading-[0.8] text-bone">
+                        {parts.day}
+                      </p>
+                      <div className="pb-0.5 sm:mt-1 sm:pb-0">
+                        <p className="font-mono text-[8px] tracking-[0.16em] text-fire">
+                          {parts.month}
+                        </p>
+                        <p className="font-mono text-[8px] tracking-[0.1em] text-white/35">
+                          {parts.year}
+                          {show.time ? ` / ${show.time}` : ""}
+                        </p>
+                      </div>
+                    </div>
 
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="display text-[1.65rem] leading-none text-bone">
-                      {show.city}
-                    </p>
-                    <span className="font-mono text-[8px] tracking-[0.12em] text-white/35">
-                      {show.country === "AR" ? "AR" : "UY"}
-                    </span>
-                  </div>
-                  <p className="mt-1 flex items-center gap-1.5 text-[0.8rem] text-ash">
-                    <MapPin size={12} className="text-white/35" aria-hidden="true" />
-                    {show.venue}
-                  </p>
-                  {show.ticketUrl ? (
-                    <a
-                      href={show.ticketUrl}
-                      target="_blank"
-                      rel="noreferrer noopener"
-                      className="mt-1.5 inline-flex items-center gap-1.5 font-mono text-[8px] tracking-[0.08em] text-amber/85 transition-colors hover:text-amber"
-                    >
-                      <Link2 size={11} aria-hidden="true" />
-                      LINK DE VENTA
-                    </a>
-                  ) : null}
-                </div>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="display text-[1.65rem] leading-none text-bone">
+                          {show.city}
+                        </p>
+                        <span className="font-mono text-[8px] tracking-[0.12em] text-white/35">
+                          {show.country === "AR" ? "AR" : "UY"}
+                        </span>
+                      </div>
+                      <p className="mt-1 flex items-center gap-1.5 text-[0.8rem] text-ash">
+                        <MapPin size={12} className="text-white/35" aria-hidden="true" />
+                        {show.venue}
+                      </p>
+                      {show.ticketUrl ? (
+                        <a
+                          href={show.ticketUrl}
+                          target="_blank"
+                          rel="noreferrer noopener"
+                          className="mt-1.5 inline-flex items-center gap-1.5 font-mono text-[8px] tracking-[0.08em] text-amber/85 transition-colors hover:text-amber"
+                        >
+                          <Link2 size={11} aria-hidden="true" />
+                          LINK DE VENTA
+                        </a>
+                      ) : null}
+                    </div>
 
-                <div className="flex items-center justify-between gap-4 sm:justify-end">
-                  {show.freeEntry ? (
-                    <span className="inline-flex items-center gap-1.5 border px-2 py-1 font-mono text-[8px] tracking-[0.14em] border-white/20 bg-white/[0.02] text-bone">
-                      <span aria-hidden="true" className="h-1 w-1 bg-bone" />
-                      ENTRADA GRATUITA
-                    </span>
-                  ) : (
-                    <StatusBadge status={show.status} />
-                  )}
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => openEdit(show)}
-                      disabled={!session.writeEnabled}
-                      aria-label={`Editar fecha en ${show.city}`}
-                      className="flex h-9 w-9 items-center justify-center border border-white/12 text-ash transition-colors hover:border-amber/60 hover:text-amber disabled:cursor-not-allowed disabled:opacity-35"
-                    >
-                      <Pencil size={13} aria-hidden="true" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDeleteTarget(show)}
-                      disabled={!session.writeEnabled}
-                      aria-label={`Eliminar fecha en ${show.city}`}
-                      className="flex h-9 w-9 items-center justify-center border border-white/12 text-ash transition-colors hover:border-fire/60 hover:text-fire disabled:cursor-not-allowed disabled:opacity-35"
-                    >
-                      <Trash2 size={13} aria-hidden="true" />
-                    </button>
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      ) : (
-        <AdminEmpty
-          title="No hay fechas con ese filtro"
-          description="Probá con otro filtro o sumá la próxima fecha de la gira."
-          action={
-            <button
-              type="button"
-              onClick={openNew}
-              disabled={!session.writeEnabled}
-              className="btn btn-fire disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <CalendarPlus size={14} aria-hidden="true" />
-              AGREGAR FECHA
-            </button>
-          }
-        />
-      )}
+                    <div className="flex items-center justify-between gap-4 sm:justify-end">
+                      {show.freeEntry ? (
+                        <span className="inline-flex items-center gap-1.5 border px-2 py-1 font-mono text-[8px] tracking-[0.14em] border-white/20 bg-white/[0.02] text-bone">
+                          <span aria-hidden="true" className="h-1 w-1 bg-bone" />
+                          ENTRADA GRATUITA
+                        </span>
+                      ) : (
+                        <StatusBadge status={show.status} />
+                      )}
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => openEdit(show)}
+                          disabled={!session.writeEnabled}
+                          aria-label={`Editar fecha en ${show.city}`}
+                          className="flex h-9 w-9 items-center justify-center border border-white/12 text-ash transition-colors hover:border-amber/60 hover:text-amber disabled:cursor-not-allowed disabled:opacity-35"
+                        >
+                          <Pencil size={13} aria-hidden="true" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDeleteTarget(show)}
+                          disabled={!session.writeEnabled}
+                          aria-label={`Eliminar fecha en ${show.city}`}
+                          className="flex h-9 w-9 items-center justify-center border border-white/12 text-ash transition-colors hover:border-fire/60 hover:text-fire disabled:cursor-not-allowed disabled:opacity-35"
+                        >
+                          <Trash2 size={13} aria-hidden="true" />
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <AdminEmpty
+              title="No hay fechas con ese filtro"
+              description="Probá con otro filtro o sumá la próxima fecha de la gira."
+              action={
+                <button
+                  type="button"
+                  onClick={openNew}
+                  disabled={!session.writeEnabled}
+                  className="btn btn-fire disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <CalendarPlus size={14} aria-hidden="true" />
+                  AGREGAR FECHA
+                </button>
+              }
+            />
+          )}
+        </section>
+
+        {/* TAB ARCHIVO / HISTORIAL */}
+        <section className="border border-white/12 bg-carbon">
+          <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3.5">
+            <div>
+              <p className="font-mono text-[9px] tracking-[0.2em] text-fire">
+                ARCHIVO / HISTORIAL
+              </p>
+              <p className="font-mono text-[8px] text-white/60">
+                {past.length > 0 ? `${past.length} FUNCIONES REALIZADAS` : "SIN REGISTROS EN ESTE PAÍS"}
+              </p>
+            </div>
+            {session.writeEnabled && (
+              <button
+                type="button"
+                onClick={openNew}
+                className="btn btn-fire text-[9px] tracking-[0.12em] transition-colors"
+              >
+                <Plus size={12} aria-hidden="true" />
+                AGREGAR
+              </button>
+            )}
+          </div>
+          {past.length ? (
+            <ul className="divide-y divide-neutral-800/80">
+              {past.map((show) => {
+                const parts = parseDate(show.date);
+
+                return (
+                  <li
+                    key={show.id}
+                    className="show-row grid gap-4 border-b border-neutral-800/80 px-3 py-4 sm:grid-cols-[100px_1fr_auto] sm:items-center sm:px-4"
+                  >
+                    <div className="flex items-end gap-2 sm:block">
+                      <p className="display text-[2.4rem] leading-[0.8] text-bone/80 md:text-[2.7rem]">
+                        {parts.day}
+                      </p>
+                      <div className="pb-0.5 sm:mt-1 sm:pb-0">
+                        <p className="font-mono text-[8px] tracking-[0.16em] text-fire/60">
+                          {parts.month}
+                        </p>
+                        <p className="font-mono text-[8px] tracking-[0.1em] text-white/30">
+                          {parts.year}
+                          {show.time ? ` / ${show.time}` : ""}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="display text-[1.65rem] leading-none text-bone/80 md:text-[2.1rem]">
+                          {show.city}
+                        </p>
+                        <span className="font-mono text-[8px] tracking-[0.12em] text-white/35">
+                          {show.country === "AR" ? "AR" : "UY"}
+                        </span>
+                      </div>
+                      <p className="mt-1 flex items-center gap-1.5 text-[0.8rem] text-ash/80">
+                        <MapPin size={12} className="text-white/35" aria-hidden="true" />
+                        {show.venue}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-4 sm:justify-end">
+                      <ArchiveBadge year={show.date.slice(0, 4)} />
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => openEdit(show)}
+                          disabled={!session.writeEnabled}
+                          aria-label={`Editar fecha en ${show.city}`}
+                          className="flex h-9 w-9 items-center justify-center border border-white/12 text-ash transition-colors hover:border-amber/60 hover:text-amber disabled:cursor-not-allowed disabled:opacity-35"
+                        >
+                          <Pencil size={13} aria-hidden="true" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDeleteTarget(show)}
+                          disabled={!session.writeEnabled}
+                          aria-label={`Eliminar fecha en ${show.city}`}
+                          className="flex h-9 w-9 items-center justify-center border border-white/12 text-ash transition-colors hover:border-fire/60 hover:text-fire disabled:cursor-not-allowed disabled:opacity-35"
+                        >
+                          <Trash2 size={13} aria-hidden="true" />
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <AdminEmpty
+              title="No hay funciones realizadas"
+              description="Probá con otro filtro o sumá fechas al archivo."
+              action={
+                <button
+                  type="button"
+                  onClick={openNew}
+                  disabled={!session.writeEnabled}
+                  className="btn btn-fire disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <CalendarPlus size={14} aria-hidden="true" />
+                  AGREGAR FECHA
+                </button>
+              }
+            />
+          )}
+        </section>
+      </div>
 
       <AdminDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
         title={editing ? "Editar fecha" : "Nueva fecha"}
         eyebrow={editing ? "MODIFICAR FUNCIÓN" : "AGREGAR A LA GIRA"}
-        description="La fecha se publica en el sitio apenas guardás. El cache público se invalida automáticamente."
+        description="La fecha se publica en el sitio justo al guardás. El cache público se invalida automáticamente."
         footer={
           <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <button
